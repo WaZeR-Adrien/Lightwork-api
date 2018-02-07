@@ -1,2 +1,5 @@
-# Lightwork-api
-Framework MV for API
+# Lightwork API
+Light Models Controllers framework for API
+
+## Current version :
+- v1
