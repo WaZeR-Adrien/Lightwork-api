@@ -12,8 +12,8 @@ class Config
         ],
         'reg' => [
             'int'       => '/^[0-9]+$/i',
-            'strint'    => '/^[a-zA-Z0-9 ]+$/i',
-            'strintacc' => '/^[\p{L}\p{Nd}\s-_]+$/i',
+            'string'    => '/^[a-zA-Z0-9 ]+$/i',
+            'stringacc' => '/^[\p{L}\p{Nd}\s-_]+$/i',
         ],
         'path' => []
     ];
