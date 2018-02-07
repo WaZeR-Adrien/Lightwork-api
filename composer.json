@@ -1,0 +1,10 @@
+{
+    "name": "Lightwork API",
+    "autoload": {
+        "psr-4": {
+            "Controllers\\": "app/controllers",
+            "Models\\": "app/models",
+            "Kernel\\": "kernel"
+        }
+    }
+}
