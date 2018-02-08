@@ -106,19 +106,21 @@ class Route
      */
     public function needToken()
     {
-        // If token does not exist : generate error
-        if (empty(getallheaders()['X-Auth-Token']) && $this->_needToken === true) {
-            ErrorToken::index();
-        }
-        else {
-            $token = Auth::findOne(['token' => getallheaders()['X-Auth-Token']]);
-
-            // If token is invalid : generator error
-            // If token expire (set date of expiration in Config file) : generate error
-            $expire = Config::getToken()['expire'];
-
-            if (null == $token || (null != $expire && $token->date + $expire < time())) {
+        if ($this->_needToken === true) {
+            // If token does not exist : generate error
+            if (empty(getallheaders()['X-Auth-Token'])) {
                 ErrorToken::index();
+            }
+            else {
+                $token = Auth::findOne(['token' => getallheaders()['X-Auth-Token']]);
+
+                // If token is invalid : generator error
+                // If token expire (set date of expiration in Config file) : generate error
+                $expire = Config::getToken()['expire'];
+
+                if (null == $token || (null != $expire && $token->date + $expire < time())) {
+                    ErrorToken::index();
+                }
             }
         }
     }
