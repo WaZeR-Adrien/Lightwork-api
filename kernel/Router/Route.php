@@ -2,6 +2,7 @@
 namespace Kernel\Router;
 
 use Controllers\Error\ErrorToken;
+use Models\Auth;
 
 class Route
 {
@@ -104,7 +105,7 @@ class Route
      */
     public function needToken()
     {
-        if (empty(getallheaders()['X-Auth-Token']) && $this->_needToken === true) {
+        if ((empty(getallheaders()['X-Auth-Token']) || null == Auth::findOne(['token' => getallheaders()['X-Auth-Token']])) && $this->_needToken === true) {
             ErrorToken::index();
         }
     }
