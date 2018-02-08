@@ -15,6 +15,9 @@ class Config
             'string'    => '/^[a-zA-Z0-9 ]+$/i',
             'stringacc' => '/^[\p{L}\p{Nd}\s-_]+$/i',
         ],
+        'token' => [
+            'expire' => 604800 // 7 days in seconds (set NULL if you want no expiration token)1
+        ],
         'path' => []
     ];
 
@@ -26,6 +29,11 @@ class Config
     public static function getReg()
     {
         return self::$_config['reg'];
+    }
+
+    public static function getToken()
+    {
+        return self::$_config['token'];
     }
 
     public static function getPath()
