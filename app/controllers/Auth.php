@@ -22,7 +22,7 @@ class Auth extends Controller
             $auth->date    = time();
             $auth->insert();
 
-            self::_render(100, true, 'Successful authentication', ['token' => $token]);
+            self::_render(100, true, null, ['token' => $token]);
         }
 
         self::_render(101, false, 'Incorrect connection information');
