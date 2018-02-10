@@ -11,7 +11,7 @@ class Example extends Controller
      */
     public static function index()
     {
-        self::_render(200, true, null, \Models\Example::getAll());
+        self::_render(200, \Models\Example::getAll());
     }
 
     /**
@@ -22,7 +22,7 @@ class Example extends Controller
      */
     public static function index2($slug, $id)
     {
-        self::_render(200, true, null, ['slug' => $slug, 'id' => $id]);
+        self::_render(200, ['slug' => $slug, 'id' => $id]);
     }
 
     /**

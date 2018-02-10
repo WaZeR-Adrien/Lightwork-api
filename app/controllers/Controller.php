@@ -47,7 +47,7 @@ class Controller
     protected static function _createToken()
     {
         $token = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        return substr(str_shuffle(str_repeat($token, 50)), 0, 50);
+        return substr(str_shuffle(str_repeat($token, 50)), 0, 50) . '/' . sha1($_SERVER['REMOTE_ADDR']);
     }
 
     /**
@@ -162,10 +162,11 @@ class Controller
     /**
      * Render to json data sended
      * @param $code
-     * @param string $status
      * @param null $data
+     * @param bool $success
+     * @param null $msg
      */
-    protected static function _render($code, $success = true, $msg = null, $data = null)
+    protected static function _render($code, $data = null, $success = true, $msg = null)
     {
         $status = Status::getStatus($code);
         $render = [

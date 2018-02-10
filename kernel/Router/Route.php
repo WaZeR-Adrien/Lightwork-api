@@ -110,8 +110,12 @@ class Route
             // If token does not exist : generate error
             if (empty(getallheaders()['X-Auth-Token'])) {
                 ErrorToken::index();
-            }
-            else {
+            } else {
+                if (explode('/', getallheaders()['X-Auth-Token'])[1] != sha1($_SERVER['REMOTE_ADDR'])) {
+                    // If the second part of token (the IP) is not equal to the IP of user which has sent the request : generator error
+                    ErrorToken::index();
+                }
+
                 $token = Auth::findOne(['token' => getallheaders()['X-Auth-Token']]);
 
                 // If token is invalid : generator error
