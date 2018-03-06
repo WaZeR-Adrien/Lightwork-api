@@ -14,7 +14,7 @@ class Controller
     ];
 
     /**
-     * Remove attributes on array
+     * Remove attributes on multidimensional array
      * @param array $array
      * @param array $attrs
      * @param string $type
@@ -38,6 +38,31 @@ class Controller
             }
         }
         return $array;
+    }
+    
+    /**
+     * Get content header by header name
+     * @param null $header
+     * @return string
+     */
+    public static function getHeader($header = null)
+    {
+        return !function_exists('getallheaders') ? self::_getAllHeaders()[$header] : getallheaders()[$header];
+    }
+
+    /**
+     * Get all headers if haven't default getallheaders() function
+     * @return array
+     */
+    private static function _getAllHeaders()
+    {
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (substr($name, 0, 5) == 'HTTP_') {
+                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            }
+        }
+        return $headers;
     }
 
     /**
