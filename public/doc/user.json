@@ -1,0 +1,117 @@
+[
+  {
+    "title": "Authenticate to the API",
+    "endpoint": "/auth",
+    "method": "POST",
+    "token": null,
+    "params": null,
+    "request": {
+      "headers": null,
+      "body": [
+        {
+          "key": "email",
+          "description": "The email of the User. Example : myemail@domain.com",
+          "type": "String"
+        },
+        {
+          "key": "password",
+          "description": "The password of the User. Example : 12345azerty",
+          "type": "String"
+        }
+      ]
+    },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "PO001",
+          "status": 201,
+          "title": "Successful added",
+          "detail": "The content is added with success",
+          "method": "POST",
+          "endpoint": "/auth"
+        },
+        "data": {
+          "token": "8pUiUizrqzSywE3UJBIdoNLV98uT5bPCy5PIinkcCFzmg97aCU/8e8a34451c47f68621968dac243e0d4c630f57f2"
+        }
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A003",
+            "status": 401,
+            "title": "Invalid login",
+            "detail": "Incorrect information of connection",
+            "method": "POST",
+            "endpoint": "/auth"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "title": "Retrieve list of Users",
+    "endpoint": "/users",
+    "method": "GET",
+    "token": true,
+    "params": null,
+    "request": {
+      "headers": [
+        {
+          "key": "X-Auth-Token",
+          "value": "YOUR_TOKEN_HERE"
+        }
+      ],
+      "body": null
+   },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "G001",
+          "status": 200,
+          "title": "OK",
+          "detail": "The content is retrieved with success",
+          "method": "GET",
+          "endpoint": "/users"
+        },
+        "data": [
+          {
+            "id":1,
+            "username":"kklass0",
+            "firstname":"Karin",
+            "lastname":"Klass"
+          },
+          {
+            "id":2,
+            "username":"brobertet1",
+            "firstname":"Bradford",
+            "lastname":"Robertet"
+          }
+        ]
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A002",
+            "status": 401,
+            "title": "Invalid token",
+            "detail": "You need a valid authentication to the API",
+            "method": "GET",
+            "endpoint": "/users"
+          }
+        }
+      ]
+    }
+  }
+]

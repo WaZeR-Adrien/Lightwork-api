@@ -1,0 +1,13 @@
+{
+    "name": "Lightwork API",
+    "require": {
+        "twig/twig": "2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Controllers\\": "app/controllers",
+            "Models\\": "app/models",
+            "Kernel\\": "kernel"
+        }
+    }
+}

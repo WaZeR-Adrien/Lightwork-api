@@ -1,0 +1,58 @@
+[
+  {
+    "success": false,
+    "code": "A001",
+    "status": 404,
+    "title": "Page not found",
+    "detail": "The endpoint does not registered"
+  },
+  {
+    "success": false,
+    "code": "A002",
+    "status": 401,
+    "title": "Invalid token",
+    "detail": "You need a valid authentication to the API"
+  },
+  {
+    "success": false,
+    "code": "A003",
+    "status": 401,
+    "title": "Invalid login",
+    "detail": "Incorrect information of connection"
+  },
+  {
+    "success": false,
+    "code": "A004",
+    "status": 422,
+    "title": "Example does not exist",
+    "detail": "No Example found with this id"
+  },
+  {
+    "success": true,
+    "code": "G001",
+    "status": 200,
+    "title": "OK",
+    "detail": "The content is retrieved with success"
+  },
+  {
+    "success": true,
+    "code": "PO001",
+    "status": 201,
+    "title": "Successful added",
+    "detail": "The content is added with success"
+  },
+  {
+    "success": true,
+    "code": "PU001",
+    "status": 201,
+    "title": "Successful updated",
+    "detail": "The content is updated with success"
+  },
+  {
+    "success": true,
+    "code": "D001",
+    "status": 200,
+    "title": "Successful deleted",
+    "detail": "The content is deleted with success"
+  }
+]

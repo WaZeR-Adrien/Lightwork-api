@@ -1,0 +1,329 @@
+[
+  {
+    "title": "Retrieve list of Examples",
+    "endpoint": "/examples",
+    "method": "GET",
+    "token": null,
+    "params": null,
+    "request": {
+      "headers": null,
+      "body": null
+    },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "G001",
+          "status": 200,
+          "title": "OK",
+          "detail": "The content is retrieved with success",
+          "method": "GET",
+          "endpoint": "/examples"
+        },
+        "data": [
+          {
+            "id":1,
+            "title":"Example number 1",
+            "content":"The content of this example"
+          },
+          {
+            "id":2,
+            "title":"Example number 2",
+            "content":"The content of this example"
+          }
+        ]
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A002",
+            "status": 401,
+            "title": "Invalid token",
+            "detail": "You need a valid authentication to the API",
+            "method": "GET",
+            "endpoint": "/users"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "title": "Retrieve slug and id in Params",
+    "endpoint": "/examples/:slug-:id",
+    "method": "GET",
+    "token": null,
+    "params": [
+      {
+        "key": "slug",
+        "description": "The slug of the Example. Example : test",
+        "type": "String"
+      },
+      {
+        "key": "id",
+        "description": "The id of the Example. Example : 1",
+        "type": "Integer"
+      }
+    ],
+    "request": {
+      "headers": null,
+      "body": null
+    },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "G001",
+          "status": 200,
+          "title": "OK",
+          "detail": "The content is retrieved with success",
+          "method": "GET",
+          "endpoint": "/examples/test-1"
+        },
+        "data": {
+          "slug": "test",
+          "id": 1
+        }
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A002",
+            "status": 401,
+            "title": "Invalid token",
+            "detail": "You need a valid authentication to the API",
+            "method": "GET",
+            "endpoint": "/examples/test-1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "title": "Update an Example",
+    "endpoint": "/examples/:id",
+    "method": "PUT",
+    "token": true,
+    "params": [
+      {
+        "key": "id",
+        "description": "The id of the Example. Example : 1",
+        "type": "Integer"
+      }
+    ],
+    "request": {
+      "headers": [
+        {
+          "key": "X-Auth-Token",
+          "value": "YOUR_TOKEN_HERE"
+        }
+      ],
+      "body": [
+        {
+          "key": "field1",
+          "description": "The field1 of the Example. Example : first content",
+          "type": "String"
+        },
+        {
+          "key": "field2",
+          "description": "The field2 of the Example. Example : second content",
+          "type": "String"
+        },
+        {
+          "key": "field3",
+          "description": "The field3 of the Example. Example : third content",
+          "type": "String"
+        }
+      ]
+    },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "PU001",
+          "status": 201,
+          "title": "Successful updated",
+          "detail": "The content is updated with success",
+          "method": "PUT",
+          "endpoint": "/examples/1"
+        }
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A002",
+            "status": 401,
+            "title": "Invalid token",
+            "detail": "You need a valid authentication to the API",
+            "method": "PUT",
+            "endpoint": "/examples/1"
+          }
+        },
+        {
+          "error": {
+            "code": "A004",
+            "status": 422,
+            "title": "Example does not exist",
+            "detail": "No Example found with this id",
+            "method": "PUT",
+            "endpoint": "/examples/1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "title": "Add a new Example",
+    "endpoint": "/examples",
+    "method": "POST",
+    "token": true,
+    "params": null,
+    "request": {
+      "headers": [
+        {
+          "key": "X-Auth-Token",
+          "value": "YOUR_TOKEN_HERE"
+        }
+      ],
+      "body": [
+        {
+          "key": "field1",
+          "description": "The field1 of the Example. Example : first content",
+          "type": "String"
+        },
+        {
+          "key": "field2",
+          "description": "The field2 of the Example. Example : second content",
+          "type": "String"
+        },
+        {
+          "key": "field3",
+          "description": "The field3 of the Example. Example : third content",
+          "type": "String"
+        }
+      ]
+    },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "PO001",
+          "status": 201,
+          "title": "Successful added",
+          "detail": "The content is added with success",
+          "method": "POST",
+          "endpoint": "/examples"
+        }
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A002",
+            "status": 401,
+            "title": "Invalid token",
+            "detail": "You need a valid authentication to the API",
+            "method": "POST",
+            "endpoint": "/examples/1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "title": "Delete an Example",
+    "endpoint": "/examples/:id",
+    "method": "DELETE",
+    "token": true,
+    "params": [
+      {
+        "key": "id",
+        "description": "The id of the Example. Example : 1",
+        "type": "Integer"
+      }
+    ],
+    "request": {
+      "headers": [
+        {
+          "key": "X-Auth-Token",
+          "value": "YOUR_TOKEN_HERE"
+        }
+      ],
+      "body": [
+        {
+          "key": "field1",
+          "description": "The field1 of the Example. Example : first content",
+          "type": "String"
+        },
+        {
+          "key": "field2",
+          "description": "The field2 of the Example. Example : second content",
+          "type": "String"
+        },
+        {
+          "key": "field3",
+          "description": "The field3 of the Example. Example : third content",
+          "type": "String"
+        }
+      ]
+    },
+    "response": {
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body-success": {
+        "success": {
+          "code": "D001",
+          "status": 200,
+          "title": "Successful deleted",
+          "detail": "The content is deleted with success",
+          "method": "DELETE",
+          "endpoint": "/examples/1"
+        }
+      },
+      "body-error": [
+        {
+          "error": {
+            "code": "A002",
+            "status": 401,
+            "title": "Invalid token",
+            "detail": "You need a valid authentication to the API",
+            "method": "DELETE",
+            "endpoint": "/examples/1"
+          }
+        },
+        {
+          "error": {
+            "code": "A004",
+            "status": 422,
+            "title": "Example does not exist",
+            "detail": "No Example found with this id",
+            "method": "DELETE",
+            "endpoint": "/examples/1"
+          }
+        }
+      ]
+    }
+  }
+]
