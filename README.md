@@ -1,5 +1,7 @@
 # Lightwork API
-Light Models Controllers framework for API
+Light MVC framework for API
+Switch to branch v*
 
-## Current version :
+## Versions :
 - v1
+- v2 beta
