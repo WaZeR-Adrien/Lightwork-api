@@ -28,19 +28,19 @@ If some information can't be filled, enter null value
 
 ## All methods of Controller can be used :
 - ***static protected* _view($view, $data = [])** : render a view with twig. Use for the documentation
-- ***static protected*_removeAttrs($array = [], $attrs = [], $type = 'obj')** : remove all attributes of an array.
+- ***static protected* _removeAttrs($array = [], $attrs = [], $type = 'obj')** : remove all attributes of an array.
 The attributes is pass in an array like ['email', 'password']...
-- ***static protected*_in_multi_array($array, $field, $needle)** : the same function that in_array but for multidimensional array
+- ***static protected* _in_multi_array($array, $field, $needle)** : the same function that in_array but for multidimensional array
 - getHeader($header = null)** : get the content of an header with its key
-- ***static protected*_createToken($withIp = true)** : realize a random token, with or without ip hash
-- ***static protected*_between($needle, $min = null, $max = null)** : check if the needle is between the min and the max
-- ***static protected*_dateUs($date)** : convert the date french date to us date
-- ***static protected*_toTimestamp($date)** : convert date to timestamp
-- ***static protected*_match($pattern, $subject)** : check if subject match with pattern previously enter in the kernel/Config.php file
-- ***static protected*_toJson($var)** : parse php content to json
-- ***static protected*_addEventLog($code, $status, $method, $endpoint)** : add the code, status, method and endpoint in the log. It's 
+- ***static protected* _createToken($withIp = true)** : realize a random token, with or without ip hash
+- ***static protected* _between($needle, $min = null, $max = null)** : check if the needle is between the min and the max
+- ***static protected* _dateUs($date)** : convert the date french date to us date
+- ***static protected* _toTimestamp($date)** : convert date to timestamp
+- ***static protected* _match($pattern, $subject)** : check if subject match with pattern previously enter in the kernel/Config.php file
+- ***static protected* _toJson($var)** : parse php content to json
+- ***static protected* _addEventLog($code, $status, $method, $endpoint)** : add the code, status, method and endpoint in the log. It's 
 use with error codes in the _render()
-- ***static protected*_render($code, $data = null)** : render the status, with code previously enter in the kernel/status.json file , and the data
+- ***static protected* _render($code, $data = null)** : render the status, with code previously enter in the kernel/status.json file , and the data
 
 ## All methods of Database can be used :
 - ***static public* getTable()** : get table which called
