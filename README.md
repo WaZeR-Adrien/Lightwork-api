@@ -10,7 +10,7 @@ Light MVC framework for API
 to use the secure system route by token
 
 ## Utils :
-- Many examples are available in files of the framework like the routes (in index.php)
+- Many examples are available in files of the framework like the routes (in index.php and documentation)
 or the controller methods (in the folder app/controllers/)
 
 ## Routing methods :
