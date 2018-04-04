@@ -1,5 +1,5 @@
 # Lightwork API [v2]
-Light MVC framework for API
+Light MVC framework for API to create API RESTful most easier
 
 ## Require :
 - Edit config in kernel/Config-sample.php by your own account database
