@@ -5,15 +5,6 @@ use Models\Testt;
 
 class Example extends Controller
 {
-    /**
-     * Render all examples
-     * Method : GET
-     */
-    public static function index()
-    {
-        // Example need to be an table in your database
-        self::_render('G001', \Models\Example::getAll());
-    }
 
     /**
      * Render slug and id passed in GET HTTP REQUEST
@@ -21,9 +12,19 @@ class Example extends Controller
      * @param $slug
      * @param $id
      */
-    public static function index2($params)
+    public static function index($params)
     {
-        self::_render('G001', ['slug' => $params->slug, 'id' => $params->id]);
+        self::render('G001', ['slug' => $params->slug, 'id' => $params->id]);
+    }
+
+    /**
+     * Render all examples
+     * Method : GET
+     */
+    public static function getAll()
+    {
+        // Example need to be an table in your database
+        self::render('G001', \Models\Example::getAll());
     }
 
     /**
@@ -40,10 +41,10 @@ class Example extends Controller
             $example->field3 = $put->field3;
             $example->update();
 
-            self::_render('PU001');
+            self::render('PU001');
         }
 
-        self::_render('A004');
+        self::render('A006', null, 'Example');
     }
 
     /**
@@ -58,7 +59,7 @@ class Example extends Controller
         $example->field3 = $post->field3;
         $example->insert();
 
-        self::_render('PO001');
+        self::render('PO001');
     }
 
     /**
@@ -71,6 +72,6 @@ class Example extends Controller
         $example = new \Models\Example($params->id);
         $example->delete();
 
-        self::_render('D001');
+        self::render('D001');
     }
 }

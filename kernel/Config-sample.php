@@ -10,6 +10,11 @@ class Config
             'user' => 'YOUR_USER',
             'pw'   => 'YOUR_PASSWORD'
         ],
+        'mail' => [
+            'host'     => 'YOUR_SMTP_HOST',
+            'username' => 'YOUR_SMTP_USER/EMAIL',
+            'pw' => 'YOUR_SMTP_PASSWORD',
+        ],
         'reg' => [
             'int'       => '/^[0-9]+$/i',
             'string'    => '/^[a-zA-Z0-9 ]+$/i',
@@ -24,6 +29,11 @@ class Config
     public static function getDatabase()
     {
         return self::$_config['database'];
+    }
+
+    public static function getMail()
+    {
+        return self::$_config['mail'];
     }
 
     public static function getReg()

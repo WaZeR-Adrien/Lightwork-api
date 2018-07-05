@@ -1,5 +1,6 @@
 <?php
 namespace Kernel;
+use Controllers\Controller;
 use PDO;
 
 class Database
@@ -9,7 +10,7 @@ class Database
     public function __construct($id = null)
     {
         $class = get_called_class();
-        if (is_null($id)) {
+        if (null == $id && null == $this->id) {
             $vars = $class::getColumns($class::getTable());
             foreach ($vars as $v) {
                 $key = $v['Field'];
@@ -33,7 +34,8 @@ class Database
      * Set and get PDO
      * @return PDO
      */
-    private static function _getPdo(){
+    private static function _getPdo()
+    {
         if (!is_null(self::$_pdo)) return self::$_pdo;
         try
         {
@@ -56,7 +58,8 @@ class Database
      * Get table which called.
      * @return string
      */
-    public static function getTable() {
+    public static function getTable()
+    {
         $class = get_called_class();
         if (isset($class::$_table)) {
             return $class::$_table;
@@ -70,7 +73,8 @@ class Database
      * @param null $table
      * @return array
      */
-    public static function getColumns($table = null) {
+    public static function getColumns($table = null)
+    {
         if (is_null($table)) {
             $table = self::getTable();
         }
@@ -90,7 +94,8 @@ class Database
      * @param $name : class
      * @return object
      */
-    public function __get($name) {
+    public function __get($name)
+    {
         if ($name == 'id') { return null; }
 
         $fullName = explode('\\', $name);
@@ -110,29 +115,32 @@ class Database
      * @param null $limit
      * @return array
      */
-    public static function where($where, $params = [], $order = null, $limit = null) {
-        $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::order($order) . self::limit($limit);
+    public static function where($where, $params = [], $order = null, $limit = null)
+    {
+        $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::_order($order) . self::_limit($limit);
         return self::query($query, $params);
     }
 
     /**
-     * Get first value with SELECT query and clause WHERE
+     * Get first row with SELECT query and clause WHERE
      * @param $where
      * @param $params
      * @return array || null
      */
-    public static function whereFirst($where, $params) {
+    public static function whereFirst($where, $params)
+    {
         $res = self::where($where, $params);
         return isset($res[0]) ? $res[0] : null;
     }
 
     /**
-     * Get last value with SELECT query and clause WHERE
+     * Get last row with SELECT query and clause WHERE
      * @param $where
      * @param $params
      * @return array | null
      */
-    public static function whereLast($where, $params) {
+    public static function whereLast($where, $params)
+    {
         $array = self::where($where, $params);
         $lastKey = count($array) - 1;
         return isset($array[$lastKey]) ? $array[$lastKey] : null;
@@ -145,7 +153,8 @@ class Database
      * @param null $limit
      * @return array
      */
-    public static function find($params, $order = null, $limit = null) {
+    public static function find($params, $order = null, $limit = null)
+    {
         $where = [];
         $p = [];
         foreach ($params as $k => $v) {
@@ -156,34 +165,36 @@ class Database
     }
 
     /**
-     * Get first value by params
+     * Get first row by params
      * @param $params
      * @return array || null
      */
-    public static function findOne($params) {
+    public static function findFirst($params)
+    {
         $array = self::find($params);
         return isset($array[0]) ? $array[0] : null;
     }
 
     /**
-     * Get last value by params
+     * Get last row by params
      * @param $params
      * @return array || null
      */
-    public static function findLast($params) {
+    public static function findLast($params)
+    {
         $array = self::find($params);
         $lastKey = count($array) - 1;
         return isset($array[$lastKey]) ? $array[$lastKey] : null;
     }
 
     /**
-     * Get first value by id
+     * Get first row by id
      * @param $id
      * @return array
      */
     public static function getById($id)
     {
-        return self::findOne(['id' => $id]);
+        return self::findFirst(['id' => $id]);
     }
 
     /**
@@ -194,7 +205,7 @@ class Database
      */
     public static function getAll($order = null, $limit = null)
     {
-        return self::query('SELECT * FROM '. self::getTable() . self::order($order) . self::limit($limit));
+        return self::query('SELECT * FROM '. self::getTable() . self::_order($order) . self::_limit($limit));
     }
 
     /**
@@ -202,7 +213,8 @@ class Database
      * @param $order
      * @return string
      */
-    public static function order($order) {
+    private static function _order($order)
+    {
         return (null !== $order) ? (' ORDER BY ' . $order) : '';
     }
 
@@ -211,7 +223,8 @@ class Database
      * @param $limit
      * @return string
      */
-    public static function limit($limit) {
+    private static function _limit($limit)
+    {
         return (null !== $limit) ? (' LIMIT ' . $limit) : '';
     }
 
@@ -245,10 +258,12 @@ class Database
         }
         $keys = implode(',', $keys);
 
-        return self::exec(
+        $q = self::exec(
             'INSERT INTO '. self::getTable() .'(' . $keys . ') VALUES (?'. str_repeat(', ?', count($values) - 1) .')',
             $values
         );
+
+        return $q ? self::getLastId() : false;
     }
 
     /**
@@ -298,23 +313,41 @@ class Database
 
     /**
      * Get info with foreign key
-     * @param $handle
-     * @param array $replacesFk
+     * @param array $targetModel
      */
-    public static function infoFk(&$handle, $replacesFk = [])
+    public function infoFk($targetModel = [])
+    {
+        foreach ($this as $k => $v) {
+            if (strpos($k, '_id')) {
+                if (array_key_exists($k, $targetModel)) {
+                    $class = "\Models\\". ucfirst($targetModel[$k]);
+                } else {
+                    $attr = substr($k, 0, strlen($k) - 3);
+                    $class = implode(array_map('ucfirst', explode('_', $attr)));
+                    $class = "\Models\\$class";
+                }
+                $this->$attr = $class::getById($v);
+                unset($this->$k);
+            }
+        }
+    }
+
+    /**
+     * Render error if id does not exist
+     * @param object $handle
+     */
+    public static function checkIdExists($handle)
     {
         foreach ($handle as $k => $v) {
             if (strpos($k, '_id')) {
-                if (array_key_exists($k, $replacesFk)) {
-                    $attr = $replacesFk[$k];
-                }
-                else {
-                    $attr = substr($k, 0, strlen($k) - 3);
-                }
+                $attr = substr($k, 0, strlen($k) - 3);
+
                 $class = implode(array_map('ucfirst', explode('_', $attr)));
-                $class = "\Models\\{$class}";
-                $handle->$attr = $class::getById($v);
-                unset($handle->$k);
+                $class = "\Models\\$class";
+
+                if (null == $class::getById($v)) {
+                    Controller::render('A006', false, $k);
+                }
             }
         }
     }
@@ -332,11 +365,11 @@ class Database
      * @param $params array
      * @return array
      */
-    public static function query($statement, $params = null){
+    public static function query($statement, $params = null)
+    {
         $q = self::_getPdo()->prepare($statement);
         $q->execute($params);
-        $res = $q->fetchAll(\PDO::FETCH_OBJ);
-        return $res;
+        return $q->fetchAll(PDO::FETCH_CLASS, get_called_class());
     }
 
     /**
@@ -344,7 +377,8 @@ class Database
      * @param $params array
      * @return int
      */
-    public static function exec($statement, $params){
+    public static function exec($statement, $params)
+    {
         $q = self::_getPdo()->prepare($statement);
         return $q->execute($params);
     }

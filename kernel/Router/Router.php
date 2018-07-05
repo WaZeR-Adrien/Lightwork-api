@@ -1,7 +1,6 @@
 <?php
 namespace Kernel\Router;
 use Controllers\Controller;
-use Controllers\Error\Error404;
 
 class Router
 {
@@ -23,11 +22,12 @@ class Router
      * @param $path
      * @param $callable
      * @param null $needToken
-     * @param null $params
+     * @param array $needRole
+     * @param array $params
      */
-    public function group($path, $callable, $needToken = null, $params = null)
+    public function group($path, $callable, $needToken = null, $needRole = [], $params = [])
     {
-        $group = new Group($path, $needToken, $params, $this);
+        $group = new Group($path, $needToken, $needRole, $params, $this);
 
         $callable($group);
     }
@@ -38,12 +38,13 @@ class Router
      * @param $callable
      * @param null $name
      * @param null $needToken
-     * @param null $params
+     * @param array $needRole
+     * @param array $params
      * @return Route
      */
-    public function add($method, $path, $callable, $name = null, $needToken = null, $params = null)
+    public function add($method, $path, $callable, $name = null, $needToken = null, $needRole = [], $params = [], $requests = [])
     {
-        $route = new Route($path, $callable, $needToken, $params);
+        $route = new Route($path, $callable, $name, $needToken, $needRole, $params, $requests);
 
         $this->_routes[$method][] = $route;
 
@@ -70,14 +71,14 @@ class Router
             foreach ($this->_routes[$_SERVER['REQUEST_METHOD']] as $route) {
 
                 if ($route->match($this->_url)) {
-                    return $route->call();
+                    return $route->call($this);
                 }
 
             }
             throw new RouterException('No matching routes', 1);
         }
         catch (RouterException $e) {
-            if ($e->getCode() === 1) { Error404::index(); }
+            if ($e->getCode() === 1) { Controller::render('A001'); }
         }
 
     }
@@ -94,5 +95,20 @@ class Router
             throw new RouterException('No route matches this name');
         }
         return $this->_namedRoutes[$name]->getUrl($params);
+    }
+
+    public function getAllRoutes()
+    {
+        $allRoutes = [];
+
+        foreach ($this->_routes as $method => $routes) {
+            foreach ($routes as $route) {
+                $route = (object) $route->getInformation();
+                $route->method = $method;
+                $allRoutes[] = $route;
+            }
+        }
+
+        return $allRoutes;
     }
 }

@@ -12,10 +12,23 @@ class Twig
             'debug' => true
         ]);
 
+        self::addFilter($twig);
         self::addExtension($twig);
         self::addGlobal($twig);
 
         return $twig;
+    }
+
+    public static function addFilter($twig)
+    {
+        $twig->addFilter( new \Twig_SimpleFilter('cast_to_array', function ($stdClassObject) {
+            return (array) $stdClassObject;
+        }));
+
+        $twig->addFilter( new \Twig_SimpleFilter('ksort', function ($array) {
+            ksort($array);
+            return $array;
+        }));
     }
 
     public static function addExtension($twig)

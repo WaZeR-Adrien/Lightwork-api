@@ -1,6 +1,7 @@
 <?php
 namespace Controllers;
 
+use Kernel\Tools\Utils;
 use Models\User;
 
 class Auth extends Controller
@@ -15,16 +16,16 @@ class Auth extends Controller
         $user = User::check($post->email, $post->password);
         if ($user) {
             // create token here
-            $token = self::_createToken();
+            $token = Utils::createToken();
             $auth = new \Models\Auth();
             $auth->user_id = $user->id;
             $auth->token   = $token;
             $auth->date    = time();
             $auth->insert();
 
-            self::_render('PO001', ['token' => $token]);
+            self::render('PO001', ['token' => $token]);
         }
 
-        self::_render('A003');
+        self::render('A004');
     }
 }

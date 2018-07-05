@@ -1,6 +1,48 @@
 $(document).ready(function () {
     if (window.location.hash == "") window.location.hash = "/home"
 
+    if (localStorage.getItem('token')) {
+        $('.logout').show()
+    }
+
+    // Disconnect the user
+    $('.logout').click(function () {
+        localStorage.removeItem('token')
+        M.toast({html: 'You are now offline', classes: 'green'})
+
+        $('.logout').fadeOut(200)
+        $('#try-route .formParams').fadeOut(200)
+        $('#try-route .formRequestBody').fadeOut(200)
+        $('#try-route .formLogin').fadeIn(200)
+    })
+
+    // Login the user before try the routes
+    $('.login').click(function () {
+        var hash = window.location.hash.replace(/^#\//, '' ),
+            hashSplitted = hash.split('/')
+
+        $.ajax({
+            type: 'POST',
+            url: $(this).data('url'),
+            data: {
+                email: $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formLogin input[name=email').val(),
+                password: $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formLogin input[name=password').val()
+            },
+            success: function (res) {
+                M.toast({html: 'Success login', classes: 'green'})
+
+                localStorage.setItem('token', res.data.token)
+                $('#try-route .formLogin').fadeOut(200)
+                $('#try-route .formParams').fadeIn(200)
+                $('#try-route .formRequestBody').fadeIn(200)
+                $('.logout').fadeIn(200)
+            },
+            error: function (res) {
+                M.toast({html: 'Bad login', classes: 'red'})
+            }
+        });
+    })
+
     // Init side nav
     $('.sidenav').sidenav({
         draggable: true
@@ -34,6 +76,26 @@ $(document).ready(function () {
                 switchReference(hashSplitted)
                 break
 
+            case 'try-route':
+                $('.page:not(#try-route)').fadeOut(200, function () {
+                    $('#try-route').fadeIn(200)
+                })
+
+                switchReference(hashSplitted)
+
+                // Show form login if the user doesn't logged
+                if (localStorage.getItem('token') == undefined) {
+                    $('#try-route .formParams').fadeOut(200)
+                    $('#try-route .formRequestBody').fadeOut(200)
+                    $('#try-route .formLogin').fadeIn(200)
+
+                } else { // Else show the forms of params and requests (if is require)
+                    $('#try-route .formLogin').fadeOut(200)
+                    $('#try-route .formParams').fadeIn(200)
+                    $('#try-route .formRequestBody').fadeIn(200)
+                }
+                break
+
             default:
                 $('.page:not(#'+ hashSplitted[0] +')').fadeOut(200, function () {
                     $('#'+ hashSplitted[0]).fadeIn(200)
@@ -49,46 +111,64 @@ $(document).ready(function () {
         })
 
         if (hashSplitted.length > 2) {
-            $('.route:not(.'+ hashSplitted[2] +')').fadeOut(200).promise().done(function() {
+            $('.route:not(.'+ hashSplitted[2] +')').fadeOut(200).promise().done(function () {
                 $('.route.'+hashSplitted[2]).fadeIn(200)
+
+                $('.reference.'+ hashSplitted[1] +' .requests .'+ hashSplitted[2]).addClass('active')
             })
         }
 
     }
 
-    // Show all json responses
-    getExamplesResponses();
+    // Launch the query of the route
+    $('#try-route .launch').click(function () {
+        var hash = window.location.hash.replace(/^#\//, '' ),
+            hashSplitted = hash.split('/')
 
-    function getExamplesResponses() {
-        var ref = $('.btn-ref')
+        // Set params in the url
+        var url = $(this).data('url'),
+            formParams = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formParams input'),
+            formRequestBody = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formRequestBody input');
 
-        // Loop on all references
-        for (var i = 0; i < ref.length; i++) {
-            $.ajax({
-                url: '/doc/'+ ref.eq(i).data('ref') +'.json',
-                method: 'GET',
-                success: data => {
+        for (var i = 0; i < formParams.length; i++) {
+            url = url.replace(':'+formParams.eq(i).attr('name'), formParams.eq(i).val())
 
-                    // Loop on all routes
-                    data.forEach(route => {
-                        var success = route.response["body-success"]
-                        var error = route.response["body-error"]
-
-                        // Set in success div the json of success
-                        var successDiv = $('.json.success.'+ route.title.replace(/ /g, '-').toLowerCase() +' code')
-                        successDiv.html(JSON.stringify(success, undefined, 2));
-
-                        // Set in success divs the json of errors
-                        var errorDiv = $('.json.error.'+ route.title.replace(/ /g, '-').toLowerCase() +' code')
-                        for (var n = 0; n < errorDiv.length; n++) {
-                            errorDiv.eq(n).html(JSON.stringify(error[n], undefined, 2));
-                        }
-                    })
-
-                    // Init prism highlight
-                    Prism.highlightAll();
-                }
-            })
+            // reset
+            formParams.eq(i).val('')
         }
-    }
+
+        var data = {}
+        for (var i = 0; i < formRequestBody.length; i++) {
+            data[formRequestBody.eq(i).attr('name')] = formRequestBody.eq(i).val()
+
+            // reset
+            formRequestBody.eq(i).val('')
+        }
+
+        // For reset (remove active on labels)
+        M.updateTextFields();
+
+        $.ajax({
+            type: $(this).data('method'),
+            url: url,
+            headers: {
+                'X-Auth-Token': localStorage.getItem('token'),
+            },
+            data: data,
+            success: function (res) {
+                showRes(res)
+            },
+            error: function (res) {
+                showRes(res.responseJSON)
+            }
+        });
+
+        function showRes(res) {
+            $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .json').fadeIn(200)
+            $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .json code').html(JSON.stringify(res, null, 4))
+
+            // Init prism highlight
+            Prism.highlightAll();
+        }
+    })
 })

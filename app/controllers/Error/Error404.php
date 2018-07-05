@@ -8,6 +8,6 @@ class Error404 extends Controller
 {
     public static function index()
     {
-        self::_render("A001");
+        self::render("A001");
     }
 }

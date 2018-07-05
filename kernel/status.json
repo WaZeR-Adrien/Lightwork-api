@@ -4,28 +4,42 @@
     "code": "A001",
     "status": 404,
     "title": "Page not found",
-    "detail": "The endpoint does not registered"
+    "detail": "The endpoint does not registered. Check in the reference if the endpoint exist."
   },
   {
     "success": false,
     "code": "A002",
     "status": 401,
     "title": "Invalid token",
-    "detail": "You need a valid authentication to the API"
+    "detail": "You need a valid authentication to the API. You need to send a valid token (which has not expired and whose the IP address correspond to yours). Look at the information below in the rubric 'Token'."
   },
   {
     "success": false,
     "code": "A003",
     "status": 401,
-    "title": "Invalid login",
-    "detail": "Incorrect information of connection"
+    "title": "Invalid role",
+    "detail": "You need a valid role to access to the API."
   },
   {
     "success": false,
     "code": "A004",
+    "status": 401,
+    "title": "Invalid login",
+    "detail": "Incorrect information of connection. The email or the password does not valid."
+  },
+  {
+    "success": false,
+    "code": "A005",
     "status": 422,
-    "title": "Example does not exist",
-    "detail": "No Example found with this id"
+    "title": "Error with this property",
+    "detail": "The property may not exist or can contain an error in the name or in the format. The name of the property is indicated in the key property of the response."
+  },
+  {
+    "success": false,
+    "code": "A006",
+    "status": 422,
+    "title": "Id does not exist",
+    "detail": "No content found with this id in this table. The name of the table is indicated in the key property of the response."
   },
   {
     "success": true,
@@ -53,6 +67,6 @@
     "code": "D001",
     "status": 200,
     "title": "Successful deleted",
-    "detail": "The content is deleted with success"
+    "detail": "The content is deleted or archived with success"
   }
 ]
