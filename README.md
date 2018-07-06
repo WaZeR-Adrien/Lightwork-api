@@ -4,4 +4,5 @@ Switch to branch v*
 
 ## Versions :
 - v1
-- v2 beta
+- v2
+- v3
