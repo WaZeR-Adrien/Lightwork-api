@@ -44,6 +44,11 @@ $router->add('GET', '/users', "User#getAll", "Get all User");
 $router->add('POST', '/users', "User#add", "Add a new User", true, [
     '>' => 2,
     '<=' => 5
+], [
+    '*email' => '',
+    '*password' => 'String',
+    'name' => 'String',
+    'age' => 'Int',
 ]);
 ```
 - PUT :
