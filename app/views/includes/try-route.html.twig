@@ -4,24 +4,26 @@
             <div class="row grey-text text-darken-2 reference {{ key }}">
                 <div class="col s5 offset-s1 requests">
                     {% for keyRoute, route in doc %}
-                        <div class="row route {{ route.title|lower|replace({' ': '-'})|replace({'.': '_'}) }}">
-                            <div class="formLogin" style="display: none;">
-                                <h4 class="bold-text">Route require token (please login)</h4>
-                                <hr>
-                                <div class="content">
-                                    <div class="row">
-                                        <div class="input-field col s12">
-                                            <input id="{{ key }}{{ keyRoute }}LoginEmail" type="email" name="email">
-                                            <label for="{{ key }}{{ keyRoute }}LoginEmail">Email</label>
+                        <div class="row route {{ route.title|lower|replace({' ': '-'})|replace({'.': '_'}) }}" data-token="{{ route.token }}">
+                            {% if route.token == true %}
+                                <div class="formLogin" style="display: none;">
+                                    <h4 class="bold-text">Route require token (please login)</h4>
+                                    <hr>
+                                    <div class="content">
+                                        <div class="row">
+                                            <div class="input-field col s12">
+                                                <input id="{{ key }}{{ keyRoute }}LoginEmail" type="email" name="email">
+                                                <label for="{{ key }}{{ keyRoute }}LoginEmail">Email</label>
+                                            </div>
+                                            <div class="input-field col s12">
+                                                <input id="{{ key }}{{ keyRoute }}LoginPassword" type="password" name="password">
+                                                <label for="{{ key }}{{ keyRoute }}LoginPassword">Password</label>
+                                            </div>
+                                            <button class="login btn">Login</button>
                                         </div>
-                                        <div class="input-field col s12">
-                                            <input id="{{ key }}{{ keyRoute }}LoginPassword" type="password" name="password">
-                                            <label for="{{ key }}{{ keyRoute }}LoginPassword">Password</label>
-                                        </div>
-                                        <button class="login btn" data-url="{{ g_base_uri }}/auth">Login</button>
                                     </div>
                                 </div>
-                            </div>
+                            {% endif %}
                             {% if route.params != null %}
                                 <div class="formParams" style="display: none;">
                                     <h4 class="bold-text">Params</h4>
@@ -86,7 +88,7 @@
                                         <span class="base-uri">{{ g_base_uri }}</span><span class="part-endpoint bold-text">/{{ route.endpoint }}</span>
                                     </div>
                                 </div>
-                                <button class="btn waves-effect waves-light launch" data-method="{{ route.method }}" data-url="{{ g_base_uri }}/{{ route.endpoint }}">TRY NOW <i class="material-icons right">send</i></button>
+                                <button class="btn waves-effect waves-light launch" data-method="{{ route.method }}" data-endpoint="{{ route.endpoint }}">TRY NOW <i class="material-icons right">send</i></button>
                                 <div class="content white-text">
                                     <pre class="json line-numbers"><code class="language-javascript"></code></pre>
                                 </div>
