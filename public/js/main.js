@@ -11,30 +11,38 @@ $(document).ready(function () {
         M.toast({html: 'You are now offline', classes: 'green'})
 
         $('.logout').fadeOut(200)
-        $('#try-route .formParams').fadeOut(200)
-        $('#try-route .formRequestBody').fadeOut(200)
-        $('#try-route .formLogin').fadeIn(200)
+
+        var hash = window.location.hash.replace(/^#\//, '' ),
+            hashSplitted = hash.split('/'),
+            route = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2]);
+
+        if (route.data('token') == true) {
+            route.find('.formParams').fadeOut(200)
+            route.find('.formRequestBody').fadeOut(200)
+            route.find('.formLogin').fadeIn(200)
+        }
     })
 
     // Login the user before try the routes
     $('.login').click(function () {
         var hash = window.location.hash.replace(/^#\//, '' ),
-            hashSplitted = hash.split('/')
+            hashSplitted = hash.split('/'),
+            route = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2]);
 
         $.ajax({
             type: 'POST',
-            url: $(this).data('url'),
+            url: 'auth',
             data: {
-                email: $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formLogin input[name=email').val(),
-                password: $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formLogin input[name=password').val()
+                email: route.find('.formLogin input[name=email]').val(),
+                password: route.find('.formLogin input[name=password]').val()
             },
             success: function (res) {
                 M.toast({html: 'Success login', classes: 'green'})
 
                 localStorage.setItem('token', res.data.token)
-                $('#try-route .formLogin').fadeOut(200)
-                $('#try-route .formParams').fadeIn(200)
-                $('#try-route .formRequestBody').fadeIn(200)
+                route.find('.formLogin').fadeOut(200)
+                route.find('.formParams').fadeIn(200)
+                route.find('.formRequestBody').fadeIn(200)
                 $('.logout').fadeIn(200)
             },
             error: function (res) {
@@ -83,16 +91,19 @@ $(document).ready(function () {
 
                 switchReference(hashSplitted)
 
+
                 // Show form login if the user doesn't logged
-                if (localStorage.getItem('token') == undefined) {
-                    $('#try-route .formParams').fadeOut(200)
-                    $('#try-route .formRequestBody').fadeOut(200)
-                    $('#try-route .formLogin').fadeIn(200)
+                var route = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2]);
+
+                if (localStorage.getItem('token') == undefined && route.data('token') == true) {
+                    route.find('.formParams').fadeOut(200)
+                    route.find('.formRequestBody').fadeOut(200)
+                    route.find('.formLogin').fadeIn(200)
 
                 } else { // Else show the forms of params and requests (if is require)
-                    $('#try-route .formLogin').fadeOut(200)
-                    $('#try-route .formParams').fadeIn(200)
-                    $('#try-route .formRequestBody').fadeIn(200)
+                    route.find('.formLogin').fadeOut(200)
+                    route.find('.formParams').fadeIn(200)
+                    route.find('.formRequestBody').fadeIn(200)
                 }
                 break
 
@@ -126,12 +137,12 @@ $(document).ready(function () {
             hashSplitted = hash.split('/')
 
         // Set params in the url
-        var url = $(this).data('url'),
+        var endpoint = $(this).data('endpoint'),
             formParams = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formParams input'),
             formRequestBody = $('#try-route .'+ hashSplitted[1] +' .'+ hashSplitted[2] +' .formRequestBody input');
 
         for (var i = 0; i < formParams.length; i++) {
-            url = url.replace(':'+formParams.eq(i).attr('name'), formParams.eq(i).val())
+            endpoint = endpoint.replace(':'+formParams.eq(i).attr('name'), formParams.eq(i).val())
 
             // reset
             formParams.eq(i).val('')
@@ -150,7 +161,7 @@ $(document).ready(function () {
 
         $.ajax({
             type: $(this).data('method'),
-            url: url,
+            url: endpoint,
             headers: {
                 'X-Auth-Token': localStorage.getItem('token'),
             },
