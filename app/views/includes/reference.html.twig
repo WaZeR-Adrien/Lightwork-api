@@ -131,7 +131,7 @@
                                                     <tbody>
                                                     {% for keyRequest, type in route.requests %}
                                                         {% if keyRequest[:1] == '*' %}
-                                                            {% set keyRequest = keyRequest|slice(1, key|length) %}
+                                                            {% set keyRequest = keyRequest|slice(1, keyRequest|length) %}
                                                             {% set require = true %}
                                                         {% else %}
                                                             {% set keyRequest = keyRequest %}
