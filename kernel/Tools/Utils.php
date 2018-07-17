@@ -140,7 +140,7 @@ class Utils
      */
     public static function match($pattern, $subject)
     {
-        return preg_match(Config::getReg()[$pattern], $subject);
+        return preg_match(Config::getRegex()[$pattern], $subject);
     }
 
     /**
