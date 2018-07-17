@@ -100,8 +100,8 @@ class Utils
         while(true)
         {
             $time = $time + $seconds;
-            if ($callback($time)) {
-                break;
+            if ($res = ($callback($time))) {
+                return $res;
             }
 
             sleep($seconds);
@@ -226,37 +226,9 @@ class Utils
         foreach ($needle as $v) {
             if (!property_exists($haystack, $v)) {
                 Controller::render('A005', false, $v);
-            } elseif (isset($type[$v]) && !preg_match('/'. Utils::setRegex($type[$v]) .'/', $haystack->$v) && Utils::setRegex($type[$v]) != '.') {
+            } elseif (isset($type[$v]) && !preg_match('/^'. Config::setRegex($type[$v]) .'$/', $haystack->$v) && Config::setRegex($type[$v]) != '.') {
                 Controller::render('A005', false, $v);
             }
-        }
-    }
-
-    /**
-     * Set the regex with the type (like : String => '\w+')
-     * @param $type
-     * @return string
-     */
-    public static function setRegex($type)
-    {
-        switch ($type) {
-            case 'String':
-                return '\w+';
-
-            case 'Int':
-                return '\d+';
-
-            case 'FrenchDate':
-                return '(0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[0-2])\/\d{4}';
-
-            case 'UsDate':
-                return '\d{4}\-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])';
-
-            case 'Datetime':
-                return '\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01]) (00|[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])(:([0-9]|[0-5][0-9]))?';
-
-            case '':
-                return '.';
         }
     }
 
