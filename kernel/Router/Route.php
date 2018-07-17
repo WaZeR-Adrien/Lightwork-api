@@ -49,7 +49,7 @@ class Route
         if (!empty($params)) {
             foreach ($params as $key => $value) {
 
-                $value = Utils::setRegex(ucfirst($value));
+                $value = Config::setRegex(ucfirst($value));
 
                 $this->_params[$key] = str_replace('(', '(?:', $value);
             }
