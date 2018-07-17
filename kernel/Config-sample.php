@@ -16,9 +16,14 @@ class Config
             'pw' => 'YOUR_SMTP_PASSWORD',
         ],
         'reg' => [
-            'int'       => '/^[0-9]+$/i',
-            'string'    => '/^[a-zA-Z0-9 ]+$/i',
-            'stringacc' => '/^[\p{L}\p{Nd}\s-_]+$/i',
+            'String'     => '\w+',
+            'StringAcc'  => '[\p{L}\p{Nd}\s-_]+',
+            'Int'        => '\d+',
+            'Boolean'    => '(true|false)',
+            'BooleanInt' => '(1|0)',
+            'FrenchDate' => '(0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[0-2])\/\d{4}',
+            'UsDate'     => '\d{4}\-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])',
+            'Datetime'   => '\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01]) (00|[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])(:([0-9]|[0-5][0-9]))?'
         ],
         'token' => [
             'expire' => 604800 // 7 days in seconds (set NULL if you want no expiration token)1
@@ -36,9 +41,25 @@ class Config
         return self::$_config['mail'];
     }
 
-    public static function getReg()
+    public static function getRegex()
     {
         return self::$_config['reg'];
+    }
+
+    public static function setRegex($type)
+    {
+        if ($type != '') {
+            if (in_array($type, self::getRegex())) {
+                // Return the regex with the type (like String => \w+)
+                return self::getRegex()[$type];
+            }
+
+            // Return directly the regex
+            return $type;
+        }
+
+        // Return all regex
+        return '.';
     }
 
     public static function getToken()
