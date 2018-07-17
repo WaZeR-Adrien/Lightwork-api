@@ -1,6 +1,8 @@
 <?php
 namespace Controllers;
 
+use Kernel\Config;
+
 class Docs extends Controller
 {
     public static function index($params, $routes)
@@ -10,6 +12,7 @@ class Docs extends Controller
             'httpRequests' => self::_httpRequests(),
             'successCodes' => self::_statusCodes()[0],
             'errorCodes' => self::_statusCodes()[1],
+            'regex' => Config::getRegex(),
             'docs' => self::_createDocs($routes)
         ]);
     }
@@ -135,7 +138,7 @@ class Docs extends Controller
      */
     private static function _description()
     {
-        return 'Welcome to the documentation of the <b>Lightwork API v3</b>.<br>
+        return 'Welcome to the documentation of the <b>Heroes Team Front Office v2</b>.<br>
         This documentation allow you to understand this RESTful API. To navigate in the documentation, 
         you can use the menu by clicking on the menu icon <i class="material-icons tiny">menu</i> at top left.<br>
         Also, in this home page, you can see all methods of HTTPs requests allowed in the API at right and at bottom the success or error codes to which refer to.';
