@@ -7,7 +7,7 @@ class Database
 {
     private static $_pdo;
 
-    public function __construct($id = null)
+    public function __construct($id = null, $needOwner = false)
     {
         $class = get_called_class();
         if (null == $id && null == $this->id) {
@@ -17,15 +17,25 @@ class Database
                 $this->$key = $v['Default'];
             }
         }
-        else {
+        elseif (null != $id) {
             $query = 'SELECT * FROM `' . $class::getTable() . '` WHERE id' . ' = ?';
             $stmt = self::_getPdo()->prepare($query);
             $stmt->execute([$id]);
             $attrs = $stmt->fetchAll(\PDO::FETCH_OBJ);
-            if (isset($attrs[0])) {
-                foreach ($attrs[0] as $key => $value) {
-                    $this->$key = $value;
+
+            // Stop and render the A006 code if the id does not exist
+            if (!isset($attrs[0])) {
+                Controller::render('A006', false, $class::getTable());
+            }
+
+            if ($needOwner && isset($attrs[0]->user_id)) {
+                if ($attrs[0]->user_id != Auth::getUser()->id) {
+                    Controller::render('A007', false, 'user_id');
                 }
+            }
+
+            foreach ($attrs[0] as $key => $value) {
+                $this->$key = $value;
             }
         }
     }
