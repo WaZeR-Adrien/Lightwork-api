@@ -49,7 +49,7 @@ class Config
     public static function setRegex($type)
     {
         if ($type != '') {
-            if (in_array($type, self::getRegex())) {
+            if (key_exists($type, self::getRegex())) {
                 // Return the regex with the type (like String => \w+)
                 return self::getRegex()[$type];
             }
