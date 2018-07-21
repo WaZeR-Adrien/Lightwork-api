@@ -329,13 +329,13 @@ class Database
     {
         foreach ($this as $k => $v) {
             if (strpos($k, '_id')) {
+                $attr = substr($k, 0, strlen($k) - 3);
                 if (array_key_exists($k, $targetModel)) {
                     $class = "\Models\\". ucfirst($targetModel[$k]);
                 } else {
                     $class = implode(array_map('ucfirst', explode('_', $attr)));
                     $class = "\Models\\$class";
                 }
-                $attr = substr($k, 0, strlen($k) - 3);
                 $this->$attr = $class::getById($v);
                 unset($this->$k);
             }
