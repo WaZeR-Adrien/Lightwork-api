@@ -66,7 +66,7 @@ class Utils
         if (null == $date) return null;
 
         if (!stripos($date, '/')) {
-            Controller::render('A005', false, $key);
+            Controller::render('E_A005', false, $key);
         }
         $tabDate = explode('/', $date);
         return $tabDate[2] . '-' . $tabDate[1] . '-' . $tabDate[0];
@@ -140,7 +140,7 @@ class Utils
      */
     public static function match($pattern, $subject)
     {
-        return preg_match(Config::getRegex()[$pattern], $subject);
+        return preg_match(Config::get('regex')[$pattern], $subject);
     }
 
     /**
@@ -225,9 +225,9 @@ class Utils
     {
         foreach ($needle as $v) {
             if (!property_exists($haystack, $v)) {
-                Controller::render('A005', false, $v);
+                Controller::render('E_A005', false, $v);
             } elseif (isset($type[$v]) && !preg_match('/^'. Config::setRegex($type[$v]) .'$/', $haystack->$v) && Config::setRegex($type[$v]) != '.') {
-                Controller::render('A005', false, $v);
+                Controller::render('E_A005', false, $v);
             }
         }
     }

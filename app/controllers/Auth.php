@@ -10,6 +10,7 @@ class Auth extends Controller
      * Login and get token if data matches with User
      * Example of Auth
      * You can edit this to match with your own database
+     * @param $post
      */
     public static function check($post)
     {
@@ -23,9 +24,9 @@ class Auth extends Controller
             $auth->date    = time();
             $auth->insert();
 
-            self::render('PO001', ['token' => $token]);
+            self::render('S_PO001', ['token' => $token]);
         }
 
-        self::render('A004');
+        self::render('E_A004');
     }
 }

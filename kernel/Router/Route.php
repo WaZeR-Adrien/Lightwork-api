@@ -213,14 +213,14 @@ class Route
 
                 // If token is invalid : generator error
                 // If token expire (set date of expiration in Config file) : generate error
-                $expire = Config::getToken()['expire'];
+                $expire = Config::get('token')['expire'];
 
                 if (null == $token || (null != $expire && $token->date + $expire < time())) {
                     $errorToken = true;
                 }
             }
 
-            if ($errorToken) Controller::render('A002');
+            if ($errorToken) Controller::render('E_A002');
             elseif (!empty($this->_needRole)) $this->needRole($token);
         }
     }
@@ -266,7 +266,7 @@ class Route
 
         }
 
-        if ($errorRole) Controller::render('A003');
+        if ($errorRole) Controller::render('E_A003');
     }
 
     /**

@@ -14,7 +14,7 @@ class Example extends Controller
      */
     public static function index($params)
     {
-        self::render('G001', ['slug' => $params->slug, 'id' => $params->id]);
+        self::render('S_G001', ['slug' => $params->slug, 'id' => $params->id]);
     }
 
     /**
@@ -24,7 +24,7 @@ class Example extends Controller
     public static function getAll()
     {
         // Example need to be an table in your database
-        self::render('G001', \Models\Example::getAll());
+        self::render('S_G001', \Models\Example::getAll());
     }
 
     /**
@@ -41,10 +41,10 @@ class Example extends Controller
             $example->field3 = $put->field3;
             $example->update();
 
-            self::render('PU001');
+            self::render('S_PU001');
         }
 
-        self::render('A006', null, 'Example');
+        self::render('E_A006', null, 'Example');
     }
 
     /**
@@ -59,7 +59,7 @@ class Example extends Controller
         $example->field3 = $post->field3;
         $example->insert();
 
-        self::render('PO001');
+        self::render('S_PO001');
     }
 
     /**
@@ -72,6 +72,6 @@ class Example extends Controller
         $example = new \Models\Example($params->id);
         $example->delete();
 
-        self::render('D001');
+        self::render('S_D001');
     }
 }

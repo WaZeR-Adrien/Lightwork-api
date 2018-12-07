@@ -36,6 +36,7 @@ class Controller
     /**
      * Add the event in the log.csv file
      * @param $code
+     * @param null $key
      * @param $status
      * @param $method
      * @param $endpoint
@@ -51,27 +52,23 @@ class Controller
 
     /**
      * Render to json data sent
-     * @param $cod
-     * @param null $data
+     * @param $code
+     * @param bool $data
+     * @param null $key
      */
     public static function render($code, $data = false, $key = null)
     {
         $res = Config::getResponse($code);
 
-        // Keep response success or error
-        $success = $res->success;
-        // Unset to doesn't show "success": true or "success": false
-        unset($res->success);
+        // Get type of response by first letter of the code
+        $success = $res->code[0] == 'S';
 
         $res->method = $_SERVER['REQUEST_METHOD'];
         $res->endpoint = $_SERVER['REQUEST_URI'];
 
-        // Don't show detail (it's available in the doc)
-        unset($res->detail);
-
         if (null != $key) {
             // It's the target key (when there are a problem for example)
-            $res->key = $key;
+            $res->message = preg_replace('/:key/', $key, $res->message);
         }
 
         $render = [

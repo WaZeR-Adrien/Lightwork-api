@@ -13,9 +13,13 @@ class Config
         'mail' => [
             'host'     => 'YOUR_SMTP_HOST',
             'username' => 'YOUR_SMTP_USER/EMAIL',
-            'pw' => 'YOUR_SMTP_PASSWORD',
+            'pw'       => 'YOUR_SMTP_PASSWORD',
         ],
-        'reg' => [
+        'captcha' => [
+            'apiSite'   => 'YOUR_API_PUBLIC_KEY',
+            'apiSecret' => 'YOUR_API_PRIVATE_KEY'
+        ],
+        'regex' => [
             'String'     => '\w+',
             'StringAcc'  => '[\p{L}\p{Nd}\s-_]+',
             'Int'        => '\d+',
@@ -31,27 +35,25 @@ class Config
         'path' => []
     ];
 
-    public static function getDatabase()
+    /**
+     * @param string $config
+     * @return mixed
+     */
+    public static function get($config)
     {
-        return self::$_config['database'];
+        return self::$_config[$config];
     }
 
-    public static function getMail()
-    {
-        return self::$_config['mail'];
-    }
-
-    public static function getRegex()
-    {
-        return self::$_config['reg'];
-    }
-
+    /**
+     * @param $type
+     * @return string
+     */
     public static function setRegex($type)
     {
         if ($type != '') {
-            if (key_exists($type, self::getRegex())) {
+            if (key_exists($type, self::get('regex'))) {
                 // Return the regex with the type (like String => \w+)
-                return self::getRegex()[$type];
+                return self::get('regex')[$type];
             }
 
             // Return directly the regex
@@ -62,16 +64,10 @@ class Config
         return '.';
     }
 
-    public static function getToken()
-    {
-        return self::$_config['token'];
-    }
-
-    public static function getPath()
-    {
-        return self::$_config['path'];
-    }
-
+    /**
+     * @param $code
+     * @return mixed
+     */
     public static function getResponse($code)
     {
         $json = file_get_contents("../kernel/status.json");

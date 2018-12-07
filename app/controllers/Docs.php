@@ -12,7 +12,7 @@ class Docs extends Controller
             'httpRequests' => self::_httpRequests(),
             'successCodes' => self::_statusCodes()[0],
             'errorCodes' => self::_statusCodes()[1],
-            'regex' => Config::getRegex(),
+            'regex' => Config::get('regex'),
             'docs' => self::_createDocs($routes)
         ]);
     }

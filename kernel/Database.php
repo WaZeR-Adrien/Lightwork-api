@@ -25,12 +25,12 @@ class Database
 
             // Stop and render the A006 code if the id does not exist
             if (!isset($attrs[0])) {
-                Controller::render('A006', false, $class::getTable());
+                Controller::render('E_A006', false, $class::getTable());
             }
 
             if ($needOwner && isset($attrs[0]->user_id)) {
                 if ($attrs[0]->user_id != Auth::getUser()->id) {
-                    Controller::render('A007', false, 'user_id');
+                    Controller::render('E_A006', false, 'user');
                 }
             }
 
@@ -49,7 +49,7 @@ class Database
         if (!is_null(self::$_pdo)) return self::$_pdo;
         try
         {
-            $db = Config::getDatabase();
+            $db = Config::get('database');
             $pdo = new PDO('mysql:dbname='. $db['db'] .';host='. $db['host'], $db['user'], $db['pw']);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
@@ -356,7 +356,7 @@ class Database
                 $class = "\Models\\$class";
 
                 if (null == $class::getById($v)) {
-                    Controller::render('A006', false, $k);
+                    Controller::render('E_A006', false, $k);
                 }
             }
         }

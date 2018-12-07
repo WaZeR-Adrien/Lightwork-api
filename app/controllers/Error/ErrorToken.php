@@ -6,6 +6,6 @@ class ErrorToken extends Controller
 {
     public static function index()
     {
-        self::render("A003");
+        self::render("E_A003");
     }
 }

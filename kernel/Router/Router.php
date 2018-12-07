@@ -78,7 +78,7 @@ class Router
             throw new RouterException('No matching routes', 1);
         }
         catch (RouterException $e) {
-            if ($e->getCode() === 1) { Controller::render('A001'); }
+            if ($e->getCode() === 1) { Controller::render('E_A001'); }
         }
 
     }

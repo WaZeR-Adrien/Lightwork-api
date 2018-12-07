@@ -1,5 +1,13 @@
-# Lightwork API [v3]
+# Lightwork API [v3.1]
 Light MVC framework for API to create API RESTful most easier
+
+## Patch note v3 -> v3.1 :
+- Status in the render() change:
+    - The code error or success is define in the code and not in property "success" (ex: E_A001 for Error A001 or S_G001 for Success G001)
+    - "Detail" becomes "message"
+- The key is no longer a property but it in the "message"
+- Fix issue on class Mail
+- Add class Captcha with public and private keys in class Config
 
 ## Require :
 - Edit config in kernel/Config-sample.php by your own information
