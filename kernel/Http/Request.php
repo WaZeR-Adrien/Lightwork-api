@@ -16,6 +16,12 @@ class Request
     private $params;
 
     /**
+     * Token of request
+     * @var string
+     */
+    private $token = null;
+
+    /**
      * Bodies data of request
      * @var object
      */
@@ -120,5 +126,21 @@ class Request
     public function setEndpoint($endpoint)
     {
         $this->endpoint = $endpoint;
+    }
+
+    /**
+     * @return string
+     */
+    public function getToken()
+    {
+        return $this->token;
+    }
+
+    /**
+     * @param string $token
+     */
+    public function setToken($token)
+    {
+        $this->token = $token;
     }
 }

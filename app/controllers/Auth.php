@@ -21,9 +21,9 @@ class Auth extends Controller
             // create token here
             $token = Utils::createToken();
             $auth = new \Models\Auth();
-            $auth->user_id = $user->id;
-            $auth->token   = $token;
-            $auth->date    = time();
+            $auth->setUserId($user->id);
+            $auth->setToken($token);
+            $auth->setDate(time());
             $auth->store();
 
             $response->setData(["token" => $token]);

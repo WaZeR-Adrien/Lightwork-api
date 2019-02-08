@@ -202,6 +202,11 @@ class Route
             return $response;
         }
 
+        $token = Utils::getHeader('X-Auth-Token');
+        if (!empty($token)) {
+            $request->setToken($token);
+        }
+
         // Request - Response - Routes
         $data = [$request, $response, $router->getAllRoutes()];
 
