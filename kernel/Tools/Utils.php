@@ -66,7 +66,7 @@ class Utils
         if (null == $date) return null;
 
         if (!stripos($date, '/')) {
-            Controller::render('E_A005', false, $key);
+            return ["error" => "E_A005", "key" => $key];
         }
         $tabDate = explode('/', $date);
         return $tabDate[2] . '-' . $tabDate[1] . '-' . $tabDate[0];
@@ -202,7 +202,12 @@ class Utils
     public static function setValuesInObject(&$haystack, $needle, $escape = []) {
         foreach ($needle as $k => $v) {
             if (property_exists($haystack, $k) && !in_array($k, $escape)) {
-                $haystack->$k = $v;
+
+                $keyRenamed = implode(array_map('ucfirst', explode('_', $k)));
+
+                $func = "set$keyRenamed";
+
+                $haystack->$func($v);
             }
         }
     }
@@ -225,9 +230,9 @@ class Utils
     {
         foreach ($needle as $v) {
             if (!property_exists($haystack, $v)) {
-                Controller::render('E_A005', false, $v);
+                return ["error" => "E_A005", "key" => $v];
             } elseif (isset($type[$v]) && !preg_match('/^'. Config::setRegex($type[$v]) .'$/', $haystack->$v) && Config::setRegex($type[$v]) != '.') {
-                Controller::render('E_A005', false, $v);
+                return ["error" => "E_A005", "key" => $v];
             }
         }
     }

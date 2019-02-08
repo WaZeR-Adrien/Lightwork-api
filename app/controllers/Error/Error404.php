@@ -1,13 +1,20 @@
 <?php
 namespace Controllers\Error;
 use Controllers\Controller;
+use Kernel\Http\Request;
+use Kernel\Http\Response;
 use Kernel\Tools\Code;
 use Kernel\Twig;
 
 class Error404 extends Controller
 {
-    public static function index()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
+    public static function index(Request $request, Response $response)
     {
-        self::render("E_A001");
+        return $response->render("E_A001")->toJson();
     }
 }

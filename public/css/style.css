@@ -1,56 +1,48 @@
 * {outline:none;}
 
+body {overflow-x: hidden;}
+
 .bold-text {font-weight: bold!important;}
+.semibold-text {font-weight: 500!important;}
 
 .sidenav .background img {width: 100%; margin-top: -20px;}
 
-.page {display: none;}
+@media screen and (min-width: 993px) {
+    nav, .page {margin-left: 300px; width: calc(100vw - 300px);}
+}
 
-.collapsible .get .collapsible-header {border-left: 10px solid #54ef75;}
-.collapsible .post .collapsible-header {border-left: 10px solid #ef9d70;}
+.collapsible .collapsible-header {background: #2e2e2e !important; border-bottom: 1px solid #252525;}
+.collapsible .collapsible-body {border-bottom: 1px solid #252525;}
+
+.collapsible .get .collapsible-header {border-left: 10px solid #37ff4b;}
+.collapsible .post .collapsible-header {border-left: 10px solid #ff883c;}
 .collapsible .put .collapsible-header,
-.collapsible .patch .collapsible-header {border-left: 10px solid #66d9ef;}
-.collapsible .delete .collapsible-header {border-left: 10px solid #ef6c64;}
+.collapsible .patch .collapsible-header {border-left: 10px solid #3becff;}
+.collapsible .delete .collapsible-header {border-left: 10px solid #ff4e49;}
+.collapsible .all .collapsible-header {border-left: 10px solid #f631ff;}
+
 .collapsible .collapsible-header span:first-child {margin-right: 10px;}
 .collapsible .collapsible-header span:nth-child(2) {margin-left: 10px;}
 
-hr {margin-bottom: 30px;}
+#home hr {margin-bottom: 30px;}
 
-#reference .reference {display: none; overflow: hidden;}
-#reference, .reference {margin: 0px;}
-#reference .requests, #reference .routes, #try-route .requests, #try-route .routes {height: calc(100vh - 64px);}
-#reference .requests .content, #try-route .requests .content {height: 80%; overflow: auto;}
-#reference .requests .collapsible-header, #try-route .requests .collapsible-header {position: relative}
-#reference .requests .collapsible-header .posright, #try-route .requests .collapsible-header .posright {position: absolute; right: 0; top: 15px;}
-#reference .route, #try-route .route {display: none;height: 100%;}
-#reference .route > .col.s12, #try-route .route > .col.s12 {height: 100%;}
-#reference .route .col.s12, #try-route .route .col.s12 {padding-left: 0; padding-right: 0;}
-#reference .route hr, #try-route .route hr {margin-bottom: 0}
-#reference .route .breadcrumbs, #try-route .route .breadcrumbs {padding-left: 25px}
-#reference .route .endpoint, #try-route .route .endpoint {padding: 20px 25px 15px 25px;}
-#reference .route .endpoint.get, #try-route .route .endpoint.get {background: #44b95d;}
-#reference .route .endpoint.post, #try-route .route .endpoint.post {background: #b97d51;}
-#reference .route .endpoint.put, #try-route .route .endpoint.put,
-#reference .route .endpoint.patch, #try-route .route .endpoint.patch {background: #46abb9;}
-#reference .route .endpoint.delete, #try-route .route .endpoint.delete {background: #b94843;}
-#reference .route .endpoint.get .chip, #try-route .route .endpoint.get .chip {background: #54ef75;}
-#reference .route .endpoint.post .chip, #try-route .route .endpoint.post .chip {background: #ef9d70;}
-#reference .route .endpoint.put .chip, #try-route .route .endpoint.put .chip,
-#reference .route .endpoint.patch .chip, #try-route .route .endpoint.patch .chip {background: #66d9ef;}
-#reference .route .endpoint.delete .chip, #try-route .route .endpoint.delete .chip {background: #ef6c64;}
-#reference .route .endpoint div, #try-route .route .endpoint div {display: inline-block}
-#reference .route .content, #try-route .route .content {height: 80%; overflow: auto; padding: 10px 25px;}
-#reference .route .content h5, #reference .route .content h6,
-#try-route .route .content h5, #try-route .route .content h6 {padding-top: 20px;}
-#reference .route .content table tr {border-color: #a1a1a1;}
-#reference .route .content table.highlight tbody tr:hover {background-color: rgba(24, 24, 24, 0.5)!important;}
-#reference :not(pre) > code[class*="language-"], #reference pre[class*="language-"],
-#try-route :not(pre) > code[class*="language-"], #try-route pre[class*="language-"] {
-    background: #212121;
-}
+#reference .about, #reference .examples {padding: 25px;}
 
-#try-route {margin: 0px;}
-#try-route .reference {overflow: hidden; display: none;}
-#try-route .requests, #try-route .routes {overflow: auto;}
-#try-route .requests .input-field label {left:0!important;}
-#try-route .launch {width: 50%; margin: 20px 25%;}
+#reference hr {height: 60.4px;}
+
+#reference .about .method-and-endpoint {padding: 20px; border-radius: 4px;}
+
+#reference .about .method-and-endpoint.get {background: #29d73d;}
+#reference .about .method-and-endpoint.post {background: #d77034;}
+#reference .about .method-and-endpoint.put,
+#reference .about .method-and-endpoint.patch {background: #2bcad7;}
+#reference .about .method-and-endpoint.delete {background: #d74541;}
+
+#reference .about .method {padding: 10px; margin-right: 20px;}
+#reference .about .method.get {background: #37ff4b;}
+#reference .about .method.post {background: #ff883c;}
+#reference .about .method.put,
+#reference .about .method.patch {background: #3becff;}
+#reference .about .method.delete {background: #ff4e49;}
+
+#reference td, #reference th {padding: 15px 5px;}

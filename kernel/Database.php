@@ -55,7 +55,7 @@ class Database
         }
         catch(\Exception $e)
         {
-            die('Error : '.$e->getMessage());
+            die($e->getMessage());
         }
         self::$_pdo = $pdo;
         self::$_pdo->exec('SET NAMES \'utf8\'');
@@ -94,8 +94,18 @@ class Database
             $q->execute();
             return $q->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\Exception $e) {
-            print($statement);
-            exit($e->getMessage());
+            die($e->getMessage());
+        }
+    }
+
+    public static function getTables()
+    {
+        try {
+            $q = self::_getPdo()->prepare("SHOW TABLES");
+            $q->execute();
+            return $q->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            die($e->getMessage());
         }
     }
 
@@ -255,10 +265,21 @@ class Database
     }
 
     /**
+     * Store the data in database
+     * If the data has an ID, the function update the data
+     * Else the function insert the data
+     * @return int
+     */
+    public function store()
+    {
+        return (null != $this->id) ? $this->update() : $this->insert();
+    }
+
+    /**
      * Insert new values
      * @return int
      */
-    public function insert()
+    private function insert()
     {
         $keys = [];
         $values = [];
@@ -281,7 +302,7 @@ class Database
      * Values and key with $this
      * @return int
      */
-    public function update()
+    private function update()
     {
         $keys = [];
         $values = [];

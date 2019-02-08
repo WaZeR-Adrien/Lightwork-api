@@ -3,7 +3,7 @@ namespace Kernel\Router;
 
 class Group
 {
-    private $_path;
+    private $_endpoint;
     private $_needToken;
     private $_needRole;
     private $_params = [];
@@ -12,15 +12,15 @@ class Group
 
     /**
      * Group constructor
-     * @param $path
+     * @param $endpoint
      * @param $needToken
      * @param $needRole
      * @param $params
      * @param Router $router
      */
-    public function __construct($path, $needToken, $needRole, $params, Router $router)
+    public function __construct($endpoint, $needToken, $needRole, $params, Router $router)
     {
-        $this->_path = trim($path, '/');
+        $this->_endpoint = trim($endpoint, '/');
         $this->_needToken = $needToken;
         $this->_needRole = $needRole;
         $this->_params = null != $params ? $params : [];
@@ -30,39 +30,40 @@ class Group
     /**
      * Add new route for this group
      * @param $method
-     * @param $path
+     * @param $endpoint
      * @param $callable
      * @param null $name
      * @param null $needToken
      * @param array $needRole
      * @param array $params
+     * @param array $bodies
      */
-    public function add($method, $path, $callable, $name = null, $needToken = null, $needRole = [], $params = [], $requests = [])
+    public function add($method, $endpoint, $callable, $name = null, $needToken = null, $needRole = [], $params = [], $bodies = [])
     {
-        trim($this->_path, '/');
+        trim($this->_endpoint, '/');
         $needToken = null !== $needToken ? $needToken : $this->_needToken;
 
         $this->_loopIncrement($params, $needRole);
 
-        $this->_router->add($method, $this->_path.$path, $callable, $name, $needToken, $needRole, $params, $requests);
+        $this->_router->add($method, ($this->_endpoint . $endpoint), $callable, $name, $needToken, $needRole, $params, $bodies);
     }
 
     /**
      * Create a subgroup of the group of routes
-     * @param $path
+     * @param $endpoint
      * @param $callable
      * @param null $needToken
      * @param array $needRole
      * @param array $params
      */
-    public function group($path, $callable, $needToken = null, $needRole = [], $params = [])
+    public function group($endpoint, $callable, $needToken = null, $needRole = [], $params = [])
     {
-        trim($this->_path, '/');
+        trim($this->_endpoint, '/');
         $needToken = null !== $needToken ? $needToken : $this->_needToken;
 
         $this->_loopIncrement($params, $needRole);
 
-        $group = new self($this->_path.$path, $needToken, $needRole, $params, $this->_router);
+        $group = new self(($this->_endpoint . $endpoint), $needToken, $needRole, $params, $this->_router);
 
         $callable($group);
     }

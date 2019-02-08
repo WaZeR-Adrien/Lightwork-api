@@ -1,7 +1,8 @@
 <?php
 namespace Controllers;
-use Kernel\Twig;
-use Models\Testt;
+use Kernel\Http\Request;
+use Kernel\Http\Response;
+use Kernel\Tools\Utils;
 
 class Example extends Controller
 {
@@ -9,22 +10,29 @@ class Example extends Controller
     /**
      * Render slug and id passed in GET HTTP REQUEST
      * Method : GET
-     * @param $slug
-     * @param $id
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      */
-    public static function index($params)
+    public static function index(Request $request, Response $response)
     {
-        self::render('S_G001', ['slug' => $params->slug, 'id' => $params->id]);
+        $response->setData(['slug' => $request->getParams()->slug, 'id' => $request->getParams()->id]);
+
+        return $response->render('S_G001')->toJson();
     }
 
     /**
      * Render all examples
      * Method : GET
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      */
-    public static function getAll()
+    public static function getAll(Request $request, Response $response)
     {
-        // Example need to be an table in your database
-        self::render('S_G001', \Models\Example::getAll());
+        $response->setData(\Models\Example::getAll());
+
+        return $response->render('S_PU001')->toJson();
     }
 
     /**
@@ -32,34 +40,37 @@ class Example extends Controller
      * Method : PUT
      * @param $id
      */
-    public static function update($put, $params)
+    public static function update(Request $request, Response $response)
     {
-        $example = new \Models\Example($params->id);
-        if (!empty($example)) {
-            $example->field1 = $put->field1;
-            $example->field2 = $put->field2;
-            $example->field3 = $put->field3;
-            $example->update();
+        $example = new \Models\Example($request->getParams()->id);
 
-            self::render('S_PU001');
+        $bodies = $request->getBodies();
+
+        if (!empty($example)) {
+            $example->setField1($bodies->field1);
+            $example->setField2($bodies->field2);
+            $example->setField3($bodies->field3);
+            $example->store();
+
+            return $response->render('S_PU001')->toJson();
         }
 
-        self::render('E_A006', null, 'Example');
+        return $response->render('E_A006', 'Example')->toJson();
     }
 
     /**
      * Add new row to Database
      * Method : POST
      */
-    public static function add($post)
+    public static function add(Request $request, Response $response)
     {
         $example = new \Models\Example();
-        $example->field1 = $post->field1;
-        $example->field2 = $post->field2;
-        $example->field3 = $post->field3;
-        $example->insert();
 
-        self::render('S_PO001');
+        Utils::setValuesInObject($example, $request->getBodies());
+
+        $example->store();
+
+        return $response->render('S_PO001')->toJson();
     }
 
     /**
@@ -67,11 +78,11 @@ class Example extends Controller
      * Method : DELETE
      * @param $id
      */
-    public static function delete($params)
+    public static function delete(Request $request, Response $response)
     {
-        $example = new \Models\Example($params->id);
+        $example = new \Models\Example($request->getParams()->id);
         $example->delete();
 
-        self::render('S_D001');
+        return $response->render('S_D001')->toJson();
     }
 }

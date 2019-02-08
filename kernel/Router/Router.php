@@ -1,50 +1,66 @@
 <?php
 namespace Kernel\Router;
 use Controllers\Controller;
+use http\Client\Response;
 
 class Router
 {
-    private $_url;
+    /**
+     * Current url of the request page
+     * @var string
+     */
+    private $_currentUrl;
+
+    /**
+     * All routes
+     * @var array
+     */
     private $_routes = [];
+
+    /**
+     * Name of routes
+     * @var array
+     */
     private $_namedRoutes = [];
 
     /**
      * Router constructor.
-     * @param $url
+     * @param string $currentUrl
      */
-    public function __construct($url)
+    public function __construct($currentUrl)
     {
-        $this->_url = $url;
+        $this->_currentUrl = $currentUrl;
     }
 
     /**
      * Create a group of routes
-     * @param $path
-     * @param $callable
-     * @param null $needToken
+     * @param string $endpoint
+     * @param string $callable
+     * @param boolean $needToken
      * @param array $needRole
      * @param array $params
      */
-    public function group($path, $callable, $needToken = null, $needRole = [], $params = [])
+    public function group($endpoint, $callable, $needToken = null, $needRole = [], $params = [])
     {
-        $group = new Group($path, $needToken, $needRole, $params, $this);
+        $group = new Group($endpoint, $needToken, $needRole, $params, $this);
 
         $callable($group);
     }
 
     /**
-     * @param $method : GET / POST / PUT / DELETE...
-     * @param $path
-     * @param $callable
-     * @param null $name
-     * @param null $needToken
+     * @param string $method : GET / POST / PUT / DELETE...
+     * @param string $endpoint
+     * @param string $callable
+     * @param string $name
+     * @param boolean $needToken
      * @param array $needRole
      * @param array $params
+     * @param array $bodies
      * @return Route
      */
-    public function add($method, $path, $callable, $name = null, $needToken = null, $needRole = [], $params = [], $requests = [])
+    public function add($method, $endpoint, $callable, $name = null, $needToken = null, $needRole = [], $params = [], $bodies = [])
     {
-        $route = new Route($path, $callable, $name, $needToken, $needRole, $params, $requests);
+        $route = new Route($method, $endpoint, $callable, $name, $needToken, $needRole, $params, $bodies);
 
         $this->_routes[$method][] = $route;
 
@@ -58,33 +74,60 @@ class Router
     }
 
     /**
-     * @return mixed
+     * Run the router to check if route match with current url
+     * @return Route
      * @throws RouterException
      */
     public function run()
     {
         if (!isset($this->_routes[$_SERVER['REQUEST_METHOD']])) {
             throw new RouterException('REQUEST_METHOD doesn\'t exist');
+            die();
         }
 
         try {
             foreach ($this->_routes[$_SERVER['REQUEST_METHOD']] as $route) {
 
-                if ($route->match($this->_url)) {
-                    return $route->call($this);
+                if ($route->match($this->_currentUrl)) {
+                    $res = $route->call($this);
+
+                    if ("object" == gettype($res) && "Kernel\Http\Response" == get_class($res)) {
+                        // Set Headers
+                        foreach ($res->getHeaders()->getAll() as $key => $value) {
+                            header($key . ':' . $value);
+                        }
+                        
+                        // Set Https status code
+                        http_response_code($res->getResponseCode()->getStatus());
+                        
+                        die($res->getBody()->getContent());
+                    } else {
+                        throw new RouterException('You must return the Response object.', 2);
+                    }
+
+                    return $route;
                 }
 
             }
             throw new RouterException('No matching routes', 1);
         }
         catch (RouterException $e) {
-            if ($e->getCode() === 1) { Controller::render('E_A001'); }
+            if ($e->getCode() === 1) {
+                $res = new \Kernel\Http\Response(null);
+
+                $res->setResponseCode("E_A001");
+
+                die($res->getBody()->getContent());
+            }
+            else {
+                die($e->getMessage());
+            }
         }
 
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @param array $params
      * @return mixed
      * @throws RouterException
@@ -97,16 +140,16 @@ class Router
         return $this->_namedRoutes[$name]->getUrl($params);
     }
 
+    /**
+     * Get all routes for the documentation
+     * @return array
+     */
     public function getAllRoutes()
     {
         $allRoutes = [];
 
         foreach ($this->_routes as $method => $routes) {
-            foreach ($routes as $route) {
-                $route = (object) $route->getInformation();
-                $route->method = $method;
-                $allRoutes[] = $route;
-            }
+            foreach ($routes as $route) { $allRoutes[] = $route; }
         }
 
         return $allRoutes;

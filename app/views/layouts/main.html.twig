@@ -10,21 +10,22 @@
     <!-- Materialize CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
     <!-- Prism CSS -->
-    <link rel="stylesheet" href="{{ g_css }}/prism.css">
+    <link rel="stylesheet" href="{{ g_css }}prism.css">
     <!-- Style CSS with your owns styles -->
-    <link rel="stylesheet" href="{{ g_css }}/style.css">
+    <link rel="stylesheet" href="{{ g_css }}style.css">
 
     <!-- JQUERY -->
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="{{ g_js }}jquery-3.3.1.min.js"></script>
     <!-- Materialize JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+    <script src="{{ g_js }}materialize.min.js"></script>
     <!-- Prism JS -->
-    <script src="{{ g_js }}/prism.js"></script>
-    <!-- Main JS contain the switch of references -->
-    <script src="{{ g_js }}main.js"></script>
+    <script src="{{ g_js }}prism.js"></script>
 
 </head>
-<body>
+<body class="grey darken-4 grey-text text-lighten-3">
+
+{% include 'includes/nav.html.twig' %}
+
 {% block body %} {% endblock %}
 </body>
 </html>

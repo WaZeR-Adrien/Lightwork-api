@@ -9,7 +9,7 @@ class Captcha
      * @param $code
      * @return bool
      */
-    function check($code)
+    public static function check($code)
     {
         if (empty($code)) {
             return false; // If is empty stop search and return false

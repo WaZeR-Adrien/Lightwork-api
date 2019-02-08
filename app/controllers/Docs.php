@@ -2,84 +2,102 @@
 namespace Controllers;
 
 use Kernel\Config;
+use Kernel\Http\Request;
+use Kernel\Http\Response;
 
 class Docs extends Controller
 {
-    public static function index($params, $routes)
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $params
+     * @param array $routes
+     * @return string
+     * @throws \Twig_Error_Loader
+     * @throws \Twig_Error_Runtime
+     * @throws \Twig_Error_Syntax
+     */
+    public static function homePage(Request $request, Response $response, $routes)
     {
-        self::_view('docs', [
-            'description' => self::_description(),
-            'httpRequests' => self::_httpRequests(),
-            'successCodes' => self::_statusCodes()[0],
-            'errorCodes' => self::_statusCodes()[1],
+        $response->setData([
+            'description' => self::getDescription(),
+            'httpRequests' => self::getHttpRequests(),
+            'responseCodes' => self::getResponseCodes(),
             'regex' => Config::get('regex'),
-            'docs' => self::_createDocs($routes)
+            'refs' => self::getRefs($routes)
         ]);
+
+        return $response->view('home');
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param array $params
+     * @param array $routes
+     * @return string
+     * @throws \Twig_Error_Loader
+     * @throws \Twig_Error_Runtime
+     * @throws \Twig_Error_Syntax
+     */
+    public static function routesPage(Request $request, Response $response, $params, $routes)
+    {
+        $response->setData([
+            'description' => self::getDescription(),
+            'httpRequests' => self::getHttpRequests(),
+            'responseCodes' => self::getResponseCodes(),
+            'regex' => Config::get('regex'),
+            'refs' => self::getRefs($routes)
+        ]);
+
+        return $response->view('routes');
     }
 
     /**
      * Create the docs with
+     * @param $routes
      * @return array
      */
-    private static function _createDocs($routes)
+    private static function getRefs($routes)
     {
-        $allRoutes = [];
+        $refs = [];
+
         foreach ($routes as $route) {
-            if ($route->endpoint != 'docs') {
-                $ref = explode('/', $route->endpoint)[0];
+            if (!in_array($route->getEndpoint(), ['docs', 'docs/routes'])) {
+                $ref = explode('/', $route->getEndpoint())[0];
 
                 $route->errors = [];
-                if ($route->token) $route->errors[] = self::_addErrorToRoute('A002', $route->method, $route->endpoint);
-                if (!empty($route->roles)) $route->errors[] = self::_addErrorToRoute('A003', $route->method, $route->endpoint);
+                if ($route->getNeedToken()) $route->errors[] = self::addErrorToRoute('E_A002');
+                if (!empty($route->getNeedRole())) $route->errors[] = self::addErrorToRoute('E_A003');
 
-                foreach ($route->requests as $key => $type) {
-                    if ($key[0] === "*") $route->errors[] = self::_addErrorToRoute('A005', $route->method, $route->endpoint, $key);
+                foreach ($route->getBodies() as $key => $type) {
+                    if ($key[0] === "*") $route->errors[] = self::addErrorToRoute('E_A005', substr($key, 1, strlen($key)));
                 }
 
-                $allRoutes[$ref][] = $route;
+                $refs[$ref][] = $route;
             }
         }
 
-        return $allRoutes;
+        return $refs;
     }
 
     /**
      * Add a new error in the doc of the route
      * @param $code
-     * @param $method
-     * @param $endpoint
-     * @return string
+     * @param null $key
+     * @return array
      */
-    private static function _addErrorToRoute($code, $method, $endpoint, $key = null)
+    private static function addErrorToRoute($code, $key = null)
     {
-        $json = file_get_contents("../kernel/status.json");
-        $codes = json_decode($json);
+        $responseCodes = self::getResponseCodes();
 
-        foreach ($codes as $item) {
-            if ($item->code == $code) {
-                if (null != $key) {
-                    $key = substr($key, 1, strlen($key));
-                    return "{\n".
-                          "  \"error\": {\n".
-                          "    \"code\": \"$code\",\n".
-                          "    \"status\": $item->status,\n".
-                          "    \"title\": \"$item->title\",\n".
-                          "    \"method\": \"$method\",\n".
-                          "    \"endpoint\": \"/$endpoint\",\n".
-                          "    \"key\": \"$key\"\n".
-                          "  }\n".
-                        "}";
-                }
-
-                return "{\n".
-                    "  \"error\": {\n".
-                    "    \"code\": \"$code\",\n".
-                    "    \"status\": $item->status,\n".
-                    "    \"title\": \"$item->title\",\n".
-                    "    \"method\": \"$method\",\n".
-                    "    \"endpoint\": \"/$endpoint\",\n".
-                    "  }\n".
-                    "}";
+        foreach ($responseCodes[1] as $resCode => $status) {
+            if ($resCode == $code) {
+                return [
+                    'code' => $code,
+                    'status' => $status['status'],
+                    'message' => (null != $key) ? preg_replace('/:key/', $key, $status['message']) : $status['message']
+                ];
             }
         }
     }
@@ -88,7 +106,7 @@ class Docs extends Controller
      * List of http requests methods allowed
      * @return array
      */
-    private static function _httpRequests()
+    private static function getHttpRequests()
     {
         return [
             [
@@ -111,21 +129,32 @@ class Docs extends Controller
     }
 
     /**
-     * List of status codes (success and error) in the status.json file (in the folder kernel)
+     * List of response codes (success and error)
      * @return array
      */
-    private static function _statusCodes()
+    private static function getResponseCodes()
     {
-        $json = file_get_contents("../kernel/status.json");
-        $codes = json_decode($json);
+        $responseCodes = Config::get('responseCode');
 
         $successCodes = [];
         $errorCodes = [];
-        foreach ($codes as $code) {
-            if ($code->success) {
-                $successCodes[] = $code;
+        foreach ($responseCodes as $code => $status) {
+            if (preg_match('#_G#', $code)) {
+                $status['method'] = 'get';
+            } elseif (preg_match('#_PO#', $code)) {
+                $status['method'] = 'post';
+            } elseif (preg_match('#_PU#', $code)) {
+                $status['method'] = 'put';
+            } elseif (preg_match('#_D#', $code)) {
+                $status['method'] = 'delete';
+            } elseif (preg_match('#_A#', $code)) {
+                $status['method'] = 'all';
+            }
+
+            if ($code[0] == 'S') {
+                $successCodes[$code] = $status;
             } else {
-                $errorCodes[] = $code;
+                $errorCodes[$code] = $status;
             }
         }
 
@@ -136,12 +165,13 @@ class Docs extends Controller
      * Set a description of the API
      * @return string
      */
-    private static function _description()
+    private static function getDescription()
     {
-        return 'Welcome to the documentation of the <b>Heroes Team Front Office v2</b>.<br>
+        $project = Config::get('project') . ' v' . Config::get('version');
+        return "Welcome to the documentation of the <b>$project</b>.<br>
         This documentation allow you to understand this RESTful API. To navigate in the documentation, 
-        you can use the menu by clicking on the menu icon <i class="material-icons tiny">menu</i> at top left.<br>
-        Also, in this home page, you can see all methods of HTTPs requests allowed in the API at right and at bottom the success or error codes to which refer to.';
+        you can use the menu by clicking on the menu icon <i class=\"material-icons tiny\">menu</i> at top left.<br>
+        Also, in this home page, you can see all methods of HTTPs requests allowed in the API at right and at bottom the success or error codes to which refer to.";
     }
 
 }

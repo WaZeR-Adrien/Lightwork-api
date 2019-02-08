@@ -7,10 +7,16 @@ use Kernel\Router\Group;
 
 $router = new Router($_GET['url']);
 
-
 // Documentation
-$router->add('GET', '/docs', "Docs#index", "Documentation", null);
+$router->group('/docs', function (Group $group) {
 
+    // Home page
+    $group->add('GET', '', "Docs#homePage", "Documentation");
+
+    // Routes page
+    $group->add('GET', '/routes', "Docs#routesPage", "Documentation");
+
+});
 
 // Auth in POST Method. Response : token
 // INFO : To use API with routes protected by token, you need to send the response token in header of all requests : "X-Auth-Token"
@@ -29,9 +35,7 @@ $router->group('/examples', function (Group $group) {
     ]);
 
     // PUT (UPDATE) Method with param
-    $group->add('PUT', '/:id', "Example#update", "Update an Example", true, [
-        '>' => 2 // Need the role superior to 2
-    ]);
+    $group->add('PUT', '/:id', "Example#update", "Update an Example", true);
 
     // POST (INSERT) Method
     $group->add('POST', '', "Example#add", "Add a new Example", true, [

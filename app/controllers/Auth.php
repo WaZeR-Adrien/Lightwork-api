@@ -1,6 +1,8 @@
 <?php
 namespace Controllers;
 
+use Kernel\Http\Request;
+use Kernel\Http\Response;
 use Kernel\Tools\Utils;
 use Models\User;
 
@@ -12,9 +14,9 @@ class Auth extends Controller
      * You can edit this to match with your own database
      * @param $post
      */
-    public static function check($post)
+    public static function check(Request $request, Response $response)
     {
-        $user = User::check($post->email, $post->password);
+        $user = User::check($request->getBodies()->email, $request->getBodies()->password);
         if ($user) {
             // create token here
             $token = Utils::createToken();
@@ -22,11 +24,13 @@ class Auth extends Controller
             $auth->user_id = $user->id;
             $auth->token   = $token;
             $auth->date    = time();
-            $auth->insert();
+            $auth->store();
 
-            self::render('S_PO001', ['token' => $token]);
+            $response->setData(["token" => $token]);
+
+            return $response->render("S_PO001")->toJson();
         }
 
-        self::render('E_A004');
+        return $response->render("E_A004")->toJson();
     }
 }

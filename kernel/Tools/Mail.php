@@ -6,14 +6,58 @@ use Kernel\Config;
 class Mail
 {
     /**
+     * @var array
+     */
+    private $from;
+
+    /**
+     * @var array
+     */
+    private $to;
+
+    /**
+     * @var array
+     */
+    private $reply;
+
+    /**
+     * @var string
+     */
+    private $subject;
+
+    /**
+     * @var string
+     */
+    private $body;
+
+    /**
+     * @var string
+     */
+    private $altbody;
+
+    /**
+     * Mail constructor.
      * @param array $from
      * @param array $to
      * @param array $reply
-     * @param $subject
-     * @param $body
-     * @param null $altbody
+     * @param string $subject
+     * @param string $body
+     * @param string $altbody
      */
-    public static function send($from = [], $to = [], $reply = [], $subject, $body, $altbody = null)
+    public function __construct($from = [], $to = [], $reply = [], $subject, $body, $altbody = null)
+    {
+        $this->from = $from;
+        $this->to = $to;
+        $this->reply = $reply;
+        $this->subject = $subject;
+        $this->body = $body;
+        $this->altbody = $altbody;
+    }
+
+    /**
+     * Send the mail
+     */
+    public function send()
     {
         $mail = new PHPMailer(true);
         try {
@@ -27,10 +71,10 @@ class Mail
             $mail->Port = 465;
 
             // Recipients
-            $mail->setFrom($from['email'], $from['name']);
+            $mail->setFrom($this->from['email'], $this->from['name']);
 
-            if (count($to) !== count($to, COUNT_RECURSIVE)) {
-                foreach ($to as $item) {
+            if (count($this->to) !== count($this->to, COUNT_RECURSIVE)) {
+                foreach ($this->to as $item) {
                     if (!empty($item['name'])) {
                         $mail->addAddress($item['email'], $item['name']);
                     } else {
@@ -38,23 +82,23 @@ class Mail
                     }
                 }
             } else {
-                if (!empty($to['name'])) {
-                    $mail->addAddress($to['email'], $to['name']);
+                if (!empty($this->to['name'])) {
+                    $mail->addAddress($this->to['email'], $this->to['name']);
                 } else {
-                    $mail->addAddress($to['email']);
+                    $mail->addAddress($this->to['email']);
                 }
             }
 
 
-            $mail->addReplyTo($reply['email'], $reply['name']);
+            $mail->addReplyTo($this->reply['email'], $this->reply['name']);
 
             // Content
             $mail->CharSet = 'UTF-8';
             $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body    = $body;
-            if (null != $altbody) {
-                $mail->AltBody = $altbody;
+            $mail->Subject = $this->subject;
+            $mail->Body    = $this->body;
+            if (null != $this->altbody) {
+                $mail->AltBody = $this->altbody;
             }
 
             $mail->send();
