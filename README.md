@@ -29,7 +29,7 @@ to use the secure system route by token
 - [Database & Models](https://github.com/WaZeR-Adrien/Lightwork-api/wiki/Database-&-Models)
 - [Many tools](https://github.com/WaZeR-Adrien/Lightwork-api/wiki/Tools)
 - [Logs](https://github.com/WaZeR-Adrien/Lightwork-api/wiki/Logs)
-- [YOur documentation](https://github.com/WaZeR-Adrien/Lightwork-api/wiki/Doc)
+- [Your documentation](https://github.com/WaZeR-Adrien/Lightwork-api/wiki/Doc)
 
 ## Contact :
 You can contact me :
