@@ -44,13 +44,13 @@ class Log
      * Log constructor.
      * @param string $code
      * @param string $key
-     * @param \DateTime $date
+     * @param date $date
      * @param int $status
      * @param string $method
      * @param string $endpoint
      * @param string $ip
      */
-    public function __construct($code, $key, \DateTime $date, $status, $method, $endpoint, $ip)
+    public function __construct($code, $key, $date, $status, $method, $endpoint, $ip)
     {
         $this->code = $code;
         $this->key = $key;
@@ -127,7 +127,7 @@ class Log
             }
         }
 
-       return $logs;
+        return $logs;
     }
 
     /**

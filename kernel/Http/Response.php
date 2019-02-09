@@ -50,7 +50,7 @@ class Response
      * @param Route $route
      * @param string $contentType
      */
-    public function __construct($route, $contentType = "text/html; charset=UTF-8")
+    public function __construct(Route $route = null, $contentType = "text/html; charset=UTF-8")
     {
         $this->route = $route;
         $this->headers = new Headers();
@@ -131,21 +131,25 @@ class Response
     }
 
     /**
-     * Add the event in the logs.csv file
-     * @param $code
+     * Add the event in the logs
      * @param $key
-     * @param $status
-     * @param $method
-     * @param $endpoint
      */
-    private function addEventLog($code, $key, $status, $method, $endpoint)
+    private function addEventLog($key)
     {
         $date = date('d/m/Y H:i:s');
 
         $ip = $_SERVER['REMOTE_ADDR'];
 
         // Create new log
-        $log = new Log($code, $key, $date, $status, $method, $endpoint, $ip);
+        $log = new Log(
+            $this->responseCode->getCode(),
+            $key,
+            $date,
+            $this->responseCode->getStatus(),
+            (null != $this->route) ? $this->route->getMethod() : "",
+            (null != $this->route) ? $this->route->getEndpoint() : "",
+            $ip
+        );
 
         // Save in logs
         $log->save();
@@ -174,9 +178,7 @@ class Response
 
         // Store error in logs
         if (!$this->isSuccess()) {
-            self::addEventLog(
-                $code, $key, $this->responseCode->getStatus(), $this->route->getMethod(), $this->route->getEndpoint()
-            );
+            self::addEventLog($key);
         }
 
         // Init the content by concatenating of success/error with responseCode and of data

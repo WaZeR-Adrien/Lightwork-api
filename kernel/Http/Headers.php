@@ -18,6 +18,14 @@ class Headers
     }
 
     /**
+     * @return string
+     */
+    public function getByKey($key)
+    {
+        return $this->data[$key];
+    }
+
+    /**
      * @param string $key
      * @param string $value
      */

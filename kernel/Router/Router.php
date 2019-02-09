@@ -2,6 +2,7 @@
 namespace Kernel\Router;
 use Controllers\Controller;
 use http\Client\Response;
+use Kernel\Http\ResponseCode;
 
 class Router
 {
@@ -96,10 +97,10 @@ class Router
                         foreach ($res->getHeaders()->getAll() as $key => $value) {
                             header($key . ':' . $value);
                         }
-                        
+
                         // Set Https status code
                         http_response_code($res->getResponseCode()->getStatus());
-                        
+
                         die($res->getBody()->getContent());
                     } else {
                         throw new RouterException('You must return the Response object.', 2);
@@ -112,10 +113,17 @@ class Router
             throw new RouterException('No matching routes', 1);
         }
         catch (RouterException $e) {
+            // Error 404
             if ($e->getCode() === 1) {
-                $res = new \Kernel\Http\Response(null);
+                $res = new \Kernel\Http\Response();
 
-                $res->setResponseCode("E_A001");
+                $res->render("E_A001")->toJson();
+
+                // Set Content Type
+                header("Content-Type:" . $res->getHeaders()->getByKey("Content-Type"));
+
+                // Set Https status code
+                http_response_code($res->getResponseCode()->getStatus());
 
                 die($res->getBody()->getContent());
             }
