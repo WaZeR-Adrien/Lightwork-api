@@ -207,7 +207,6 @@ class Response
         $this->headers->set("Content-Type", "application/json");
 
         // Convert the content to JSON
-        // Unserialize ?
         $this->body->setContent(
             json_encode(unserialize($this->body->getContent()))
         );
@@ -224,7 +223,6 @@ class Response
         $this->headers->set("Content-Type", "text/xml; charset=UTF-8");
 
         // Convert the content to XML
-        // Unserialize ?
         $this->body->setContent(
             new Converter((array) unserialize($this->body->getContent()))
         );
@@ -235,7 +233,6 @@ class Response
     /**
      * Generate view with data
      * @param string $view
-     * @return string
      * @throws \Twig_Error_Loader
      * @throws \Twig_Error_Runtime
      * @throws \Twig_Error_Syntax
@@ -244,6 +241,7 @@ class Response
     {
         $twig = Twig::init();
 
-        return $twig->render($view . '.html.twig', (array) $this->data);
+        echo $twig->render($view . '.html.twig', (array) $this->data);
+        die();
     }
 }

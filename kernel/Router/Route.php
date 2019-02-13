@@ -191,15 +191,15 @@ class Route
         $response = new Response($this);
 
         // If there are errors with token : generate error
-        if (!empty($this->needToken()["error"])) {
-            $response->setResponseCode($this->needToken()["error"]);
-            return $response;
+        $needToken = $this->needToken();
+        if (!empty($needToken["error"])) {
+            return $response->render($needToken["error"])->toJson();
         }
 
         // If there are errors with data bodies : generate error
-        if (!empty($this->checkBodies()["error"])) {
-            $response->setResponseCode($this->checkBodies()["error"]);
-            return $response;
+        $bodies = $this->checkBodies();
+        if (!empty($bodies["error"])) {
+            return $response->render($bodies["error"], $bodies["key"])->toJson();
         }
 
         $token = Utils::getHeader('X-Auth-Token');

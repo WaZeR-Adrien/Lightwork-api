@@ -5,7 +5,7 @@ class GeneratorFiles
 {
     /**
      * Models files
-     * @var bool 
+     * @var bool
      */
     private $models;
 
@@ -17,7 +17,7 @@ class GeneratorFiles
     {
         $this->models = $models;
     }
-    
+
     private function models()
     {
         foreach (\Kernel\Database::getTables() as $table) {
@@ -39,7 +39,7 @@ class GeneratorFiles
                 "    * Exact name of the table\n".
                 "    * @var string\n".
                 "    */\n".
-                "   protected static \$_table = \"$table\";\n".
+                "   public static \$_table = \"$table\";\n".
                 "\n";
 
             // Generate attributes
@@ -48,11 +48,11 @@ class GeneratorFiles
 
                 $type = strpos("int", $column['Type']) ? "int" : "string";
 
-                $class .= 
+                $class .=
                     "   /**\n".
                     "    * @var $type\n".
                     "    */\n".
-                    "   protected \$$field;\n".
+                    "   public \$$field;\n".
                     "\n";
 
             }
@@ -94,7 +94,7 @@ class GeneratorFiles
 
             // Get the path of the file to create
             $path = "$rootDir/app/models/$tableRenamed.php";
-            
+
             // Open/Create the file
             $file = fopen($path, "w");
 

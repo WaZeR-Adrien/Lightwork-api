@@ -27,7 +27,7 @@ class Docs extends Controller
             'refs' => self::getRefs($routes)
         ]);
 
-        return $response->view('home');
+        $response->view('home');
     }
 
     /**
@@ -40,7 +40,7 @@ class Docs extends Controller
      * @throws \Twig_Error_Runtime
      * @throws \Twig_Error_Syntax
      */
-    public static function routesPage(Request $request, Response $response, $params, $routes)
+    public static function routesPage(Request $request, Response $response, $routes)
     {
         $response->setData([
             'description' => self::getDescription(),
@@ -50,7 +50,7 @@ class Docs extends Controller
             'refs' => self::getRefs($routes)
         ]);
 
-        return $response->view('routes');
+        $response->view('routes');
     }
 
     /**
