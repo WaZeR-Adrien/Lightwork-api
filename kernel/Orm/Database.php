@@ -338,7 +338,6 @@ class Database
             $values[] = $this->id;
         }
         $res = $this->exec('DELETE FROM ' . self::getTable() . ' WHERE ' . implode(' = ? AND ', $params) . ' = ?', $values);
-        unset($this);
         return $res;
     }
 

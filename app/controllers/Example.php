@@ -16,9 +16,13 @@ class Example extends Controller
      */
     public static function index(Request $request, Response $response)
     {
-        $response->setData(['slug' => $request->getParams()->slug, 'id' => $request->getParams()->id]);
+        //$response->setData(['slug' => $request->getParams()->slug, 'id' => $request->getParams()->id]);
 
-        return $response->render('S_G001')->toJson();
+        $response->getBody()
+            ->add("slug", $request->getParams()->slug)
+            ->add("id", $request->getParams()->id);
+
+        return $response->getRenderFromApi("S_G001")->toJson();
     }
 
     /**

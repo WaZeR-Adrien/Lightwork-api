@@ -2,7 +2,7 @@
 namespace Kernel\Router;
 use Controllers\Controller;
 use http\Client\Response;
-use Kernel\Http\ResponseCode;
+use Kernel\Http\ApiCode;
 
 class Router
 {
@@ -92,18 +92,18 @@ class Router
                 if ($route->match($this->_currentUrl)) {
                     $res = $route->call($this);
 
-                    if ("object" == gettype($res) && "Kernel\Http\Response" == get_class($res)) {
+                    if ("object" == gettype($res) && "Kernel\Http\Render" == get_class($res)) {
                         // Set Headers
                         foreach ($res->getHeaders()->getAll() as $key => $value) {
                             header($key . ':' . $value);
                         }
 
                         // Set Https status code
-                        http_response_code($res->getResponseCode()->getStatus());
+                        //http_response_code($res->getResponseCode()->getStatus());
 
-                        die($res->getBody()->getContent());
+                        die($res->getContent());
                     } else {
-                        throw new RouterException('You must return the Response object.', 2);
+                        throw new RouterException('You must return the Render object.', 2);
                     }
 
                     return $route;

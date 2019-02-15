@@ -4,46 +4,40 @@ namespace Kernel\Http;
 use GreenCape\Xml\Converter;
 use Kernel\Logs\Log;
 use Kernel\Router\Route;
+use Kernel\Tools\Collection;
 use Kernel\Twig;
 
 class Response
 {
     /**
-     * Data in response
-     * @var mixed
-     */
-    private $data = false;
-
-    /**
-     * Success in the render
-     * True if success / False if error
-     * @var bool
-     */
-    private $success = true;
-
-    /**
-     * Code of the response
-     * @var ResponseCode
-     */
-    private $responseCode;
-
-    /**
-     * Headers
-     * @var Headers
+     * Headers Collection
+     * @var Collection
      */
     private $headers;
 
     /**
-     * Body
-     * @var Body
+     * Body Collection
+     * @var Collection
      */
     private $body;
+
+    /**
+     * Render response
+     * @var Render
+     */
+    private $render;
 
     /**
      * Route
      * @var Route
      */
     private $route;
+
+    /**
+     * Content to show (View / JSON / XML / YAML...)
+     * @var mixed
+     */
+    private $content = "";
 
     /**
      * Response constructor.
@@ -53,49 +47,9 @@ class Response
     public function __construct(Route $route = null, $contentType = "text/html; charset=UTF-8")
     {
         $this->route = $route;
-        $this->headers = new Headers();
-        $this->headers->set("Content-Type", $contentType);
-        $this->body = new Body();
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    /**
-     * @param mixed $data
-     */
-    public function setData($data)
-    {
-        $this->data = $data;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isSuccess()
-    {
-        return $this->success;
-    }
-
-    /**
-     * @return ResponseCode
-     */
-    public function getResponseCode()
-    {
-        return $this->responseCode;
-    }
-
-    /**
-     * @param ResponseCode $responseCode
-     */
-    public function setResponseCode($responseCode)
-    {
-        $this->responseCode = $responseCode;
+        $this->headers = new Collection();
+        $this->headers->add("Content-Type", $contentType);
+        $this->body = new Collection();
     }
 
     /**
@@ -115,7 +69,7 @@ class Response
     }
 
     /**
-     * @return Headers
+     * @return Collection
      */
     public function getHeaders()
     {
@@ -123,7 +77,7 @@ class Response
     }
 
     /**
-     * @return object
+     * @return Collection
      */
     public function getBody()
     {
@@ -131,10 +85,27 @@ class Response
     }
 
     /**
-     * Add the event in the logs
-     * @param $key
+     * @param mixed $content
      */
-    private function addEventLog($key)
+    public function setContent($content)
+    {
+        $this->content = $content;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getContent()
+    {
+        return $this->content;
+    }
+
+    /**
+     * Add the event in the logs
+     * @param string $key
+     * @param ApiCode $apiCode
+     */
+    private function addEventLog($key, $apiCode)
     {
         $date = date('d/m/Y H:i:s');
 
@@ -142,10 +113,10 @@ class Response
 
         // Create new log
         $log = new Log(
-            $this->responseCode->getCode(),
+            $apiCode->getCode(),
             $key,
             $date,
-            $this->responseCode->getStatus(),
+            $apiCode->getStatus(),
             (null != $this->route) ? $this->route->getMethod() : "",
             (null != $this->route) ? $this->route->getEndpoint() : "",
             $ip
@@ -161,39 +132,37 @@ class Response
      * @param string $key
      * @return Response
      */
-    public function render($code, $key = null)
+    public function fromApi($code, $key = null)
     {
         // Get type of response by first letter of the code
-        $this->success = $code[0] == 'S';
+        $type = $code[0] == "S" ? "success" : "error";
 
         // Create new response code
-        $this->responseCode = new ResponseCode($code);
+        $apiCode = new ApiCode($code);
 
         if (null != $key) {
             // It's the target key (when there are a problem for example)
-            $this->responseCode->setMessage(
-                preg_replace('/:key/', $key, $this->responseCode->getMessage())
+            $apiCode->setMessage(
+                preg_replace('/:key/', $key, $apiCode->getMessage())
             );
         }
 
         // Store error in logs
-        if (!$this->isSuccess()) {
-            self::addEventLog($key);
+        if ($type == "error") {
+            self::addEventLog($key, $apiCode);
         }
 
         // Init the content by concatenating of success/error with responseCode and of data
-        $content = new \stdClass();
+        $body = new Collection();
 
-        $success = $this->isSuccess() ? 'success' : 'error';
+        $body->add($type, $apiCode->jsonSerialize());
 
-        $content->$success = $this->responseCode->jsonSerialize();
-
-        if ($this->data !== false) {
-            $content->data = $this->data;
+        if (!$this->body->isEmpty()) {
+            $body->add("data", $this->body->getAll());
         }
 
-        // Set the content serialized in the body
-        $this->body->setContent(serialize($content));
+        // Replace body
+        $this->body->purge()->push($body);
 
         return $this;
     }
@@ -204,12 +173,11 @@ class Response
     public function toJson()
     {
         // Set Content Type to JSON
-        $this->headers->set("Content-Type", "application/json");
+        $this->headers->add("Content-Type", "application/json");
 
         // Convert the content to JSON
-        $this->body->setContent(
-            json_encode(unserialize($this->body->getContent()))
-        );
+        $this->content =
+            json_encode($this->body->getAll());
 
         return $this;
     }
@@ -220,12 +188,11 @@ class Response
     public function toXml()
     {
         // Set Content Type to XML
-        $this->headers->set("Content-Type", "text/xml; charset=UTF-8");
+        $this->headers->add("Content-Type", "text/xml; charset=UTF-8");
 
         // Convert the content to XML
-        $this->body->setContent(
-            new Converter((array) unserialize($this->body->getContent()))
-        );
+        $this->content =
+            new Converter((array) $this->body->getAll());
 
         return $this;
     }
@@ -237,11 +204,15 @@ class Response
      * @throws \Twig_Error_Runtime
      * @throws \Twig_Error_Syntax
      */
-    public function view($view)
+    public function toView($view)
     {
-        $twig = Twig::init();
+        // Set Content Type to HTML
+        $this->headers->add("Content-Type", "text/html; charset=UTF-8");
 
-        echo $twig->render($view . '.html.twig', (array) $this->data);
-        die();
+        $twig = Twig::getInstance();
+
+        $this->content = $twig->render($view . '.html.twig', (array) $this->body->getAll());
+
+        return $this;
     }
 }

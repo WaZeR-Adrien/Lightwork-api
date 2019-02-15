@@ -6,7 +6,7 @@ use Twig\TwigFilter;
 
 class Twig
 {
-    public static function init()
+    public static function getInstance()
     {
         $loader = new \Twig_Loader_Filesystem('../app/views/');
         $twig = new \Twig_Environment($loader, [

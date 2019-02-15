@@ -3,7 +3,7 @@ namespace Kernel\Http;
 
 use Kernel\Config;
 
-class ResponseCode implements \JsonSerializable
+class ApiCode implements \JsonSerializable
 {
     /**
      * Code
@@ -30,14 +30,14 @@ class ResponseCode implements \JsonSerializable
     public function __construct($code)
     {
         try {
-            if (isset(Config::get('responseCode')[$code])) {
-                $resCode = Config::get('responseCode')[$code];
+            if (isset(Config::get('apiCode')[$code])) {
+                $resCode = Config::get('apiCode')[$code];
 
                 $this->code = $code;
                 $this->status = $resCode['status'];
                 $this->message = $resCode['message'];
             } else {
-                throw new \Exception("Response code does not exist");
+                throw new \Exception("Api code does not exist");
             }
         } catch (\Exception $e) {
             die($e->getMessage());
