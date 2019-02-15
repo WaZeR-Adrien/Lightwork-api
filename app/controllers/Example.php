@@ -22,7 +22,7 @@ class Example extends Controller
             ->add("slug", $request->getParams()->slug)
             ->add("id", $request->getParams()->id);
 
-        return $response->getRenderFromApi("S_G001")->toJson();
+        return $response->fromApi("S_G001")->toYaml();
     }
 
     /**

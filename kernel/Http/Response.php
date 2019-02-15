@@ -6,6 +6,7 @@ use Kernel\Logs\Log;
 use Kernel\Router\Route;
 use Kernel\Tools\Collection;
 use Kernel\Twig;
+use Symfony\Component\Yaml\Yaml;
 
 class Response
 {
@@ -187,6 +188,21 @@ class Response
         // Convert the content to XML
         $this->content =
             new Converter((array) $this->body->getAll());
+
+        return $this;
+    }
+
+    /**
+     * Convert the body to YAML format
+     */
+    public function toYaml()
+    {
+        // Set Content Type to YAML
+        $this->headers->add("Content-Type", "text/yaml");
+
+        // Convert the content to YAML
+        $this->content =
+            Yaml::dump($this->body->getAll());
 
         return $this;
     }

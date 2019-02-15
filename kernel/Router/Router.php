@@ -92,7 +92,7 @@ class Router
                 if ($route->match($this->_currentUrl)) {
                     $res = $route->call($this);
 
-                    if ("object" == gettype($res) && "Kernel\Http\Render" == get_class($res)) {
+                    if ("object" == gettype($res) && "Kernel\Http\Response" == get_class($res)) {
                         // Set Headers
                         foreach ($res->getHeaders()->getAll() as $key => $value) {
                             header($key . ':' . $value);
@@ -103,7 +103,7 @@ class Router
 
                         die($res->getContent());
                     } else {
-                        throw new RouterException('You must return the Render object.', 2);
+                        throw new RouterException('You must return the Response object.', 2);
                     }
 
                     return $route;
