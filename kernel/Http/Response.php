@@ -22,12 +22,6 @@ class Response
     private $body;
 
     /**
-     * Render response
-     * @var Render
-     */
-    private $render;
-
-    /**
      * Route
      * @var Route
      */
