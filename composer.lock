@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "5477cf827260011c41c9dd5cc9cb66dc",
+    "content-hash": "f99a9e373fed3e139618b24acdb21b1b",
     "packages": [
         {
             "name": "greencape/xml-converter",
@@ -49,6 +49,96 @@
             "description": "A PHP XML parser and compiler that provides an easy way to convert XML into native PHP arrays and back again. No dependencies on external libraries or extensions.",
             "homepage": "https://github.com/greencape/xml-converter",
             "time": "2014-08-06T01:42:10+00:00"
+        },
+        {
+            "name": "jasny/php-functions",
+            "version": "v3.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jasny/php-functions.git",
+                "reference": "2dac4273d80f7aadff8e027c8574d61c85a607ac"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jasny/php-functions/zipball/2dac4273d80f7aadff8e027c8574d61c85a607ac",
+                "reference": "2dac4273d80f7aadff8e027c8574d61c85a607ac",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6"
+            },
+            "require-dev": {
+                "jasny/php-code-quality": "^2.0",
+                "phpunit/phpunit": "^5.7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/array_functions.php",
+                    "src/case_functions.php",
+                    "src/string_functions.php",
+                    "src/server_functions.php",
+                    "src/type_functions.php",
+                    "src/file_functions.php",
+                    "src/func_functions.php",
+                    "src/object_functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Arnold Daniels",
+                    "email": "arnold@jasny.net",
+                    "homepage": "http://www.jasny.net"
+                }
+            ],
+            "description": "A set of useful PHP functions",
+            "time": "2018-11-26T11:24:27+00:00"
+        },
+        {
+            "name": "jasny/phpdoc-parser",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jasny/phpdoc-parser.git",
+                "reference": "2388d0085c530d077fc3e46944d109902b553592"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jasny/phpdoc-parser/zipball/2388d0085c530d077fc3e46944d109902b553592",
+                "reference": "2388d0085c530d077fc3e46944d109902b553592",
+                "shasum": ""
+            },
+            "require": {
+                "jasny/php-functions": "^3.3",
+                "php": ">=7.1.0"
+            },
+            "require-dev": {
+                "appzcoder/phpcloc": "^0.0.2",
+                "jasny/php-code-quality": "^2.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jasny\\PhpdocParser\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Arnold Daniels",
+                    "email": "arnold@jasny.net",
+                    "homepage": "http://www.jasny.net"
+                }
+            ],
+            "description": "Jasny skeleton library",
+            "time": "2018-09-15T15:49:22+00:00"
         },
         {
             "name": "nette/php-generator",
@@ -504,7 +594,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "jasny/phpdoc-parser": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

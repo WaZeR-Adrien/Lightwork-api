@@ -17,6 +17,12 @@ class Response
     private $apiCode;
 
     /**
+     * Http status code
+     * @var int
+     */
+    private $status;
+
+    /**
      * Headers Collection
      * @var Collection
      */
@@ -45,9 +51,10 @@ class Response
      * @param Route $route
      * @param string $contentType
      */
-    public function __construct(Route $route = null, $contentType = "text/html; charset=UTF-8")
+    public function __construct(Route $route = null, $status = 200, $contentType = "text/html; charset=UTF-8")
     {
         $this->route = $route;
+        $this->status = $status;
         $this->headers = new Collection();
         $this->headers->add($contentType, "Content-Type");
         $this->body = new Collection();
@@ -110,6 +117,22 @@ class Response
     }
 
     /**
+     * @return int
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param int $status
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+    }
+
+    /**
      * Add the event in the logs
      * @param string $key
      */
@@ -124,7 +147,7 @@ class Response
             $this->apiCode->getCode(),
             $key,
             $date,
-            $this->apiCode->getStatus(),
+            $this->getStatus(),
             (null != $this->route) ? $this->route->getMethod() : "",
             (null != $this->route) ? $this->route->getEndpoint() : "",
             $ip
@@ -147,6 +170,8 @@ class Response
 
         // Create new response code
         $this->apiCode = new ApiCode($code);
+
+        $this->status = $this->apiCode->getStatus();
 
         if (null != $key) {
             // It's the target key (when there are a problem for example)
@@ -181,7 +206,7 @@ class Response
     public function toJson()
     {
         // Set Content Type to JSON
-        $this->headers->add("application/json", "Content-Type");
+        $this->headers->update("Content-Type", "application/json");
 
         // Convert the content to JSON
         $this->content =
@@ -196,7 +221,7 @@ class Response
     public function toXml()
     {
         // Set Content Type to XML
-        $this->headers->add("text/xml; charset=UTF-8", "Content-Type");
+        $this->headers->update("Content-Type", "text/xml; charset=UTF-8");
 
         // Recursive cast
         $body = json_decode(json_encode($this->body->getAll()), true);
@@ -214,7 +239,7 @@ class Response
     public function toYaml()
     {
         // Set Content Type to YAML
-        $this->headers->add("text/yaml", "Content-Type");
+        $this->headers->update("Content-Type", "text/yaml");
 
         // Convert the content to YAML
         $this->content =
@@ -233,7 +258,7 @@ class Response
     public function toView($view)
     {
         // Set Content Type to HTML
-        $this->headers->add("text/html; charset=UTF-8", "Content-Type");
+        $this->headers->update("Content-Type", "text/html; charset=UTF-8");
 
         $twig = Twig::getInstance();
 

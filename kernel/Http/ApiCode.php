@@ -2,6 +2,7 @@
 namespace Kernel\Http;
 
 use Kernel\Config;
+use Kernel\Tools\Utils;
 
 class ApiCode implements \JsonSerializable
 {
@@ -30,8 +31,8 @@ class ApiCode implements \JsonSerializable
     public function __construct($code)
     {
         try {
-            if (isset(Config::get('apiCode')[$code])) {
-                $resCode = Config::get('apiCode')[$code];
+            if (isset(Utils::getConfigElement("apiCode")[$code])) {
+                $resCode = Utils::getConfigElement("apiCode")[$code];
 
                 $this->code = $code;
                 $this->status = $resCode['status'];

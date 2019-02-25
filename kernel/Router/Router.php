@@ -99,7 +99,7 @@ class Router
                         }
 
                         // Set Https status code
-                        http_response_code($res->getApiCode()->getStatus());
+                        http_response_code($res->getStatus());
 
                         die($res->getContent());
                     } else {
