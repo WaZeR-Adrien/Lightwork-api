@@ -1,10 +1,10 @@
 <?php
 namespace Kernel\Router;
 
-use Controllers\Controller;
 use Kernel\Config;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
+use Kernel\Tools\Collection\Collection;
 use Kernel\Tools\Utils;
 use Models\Auth;
 use Models\User;
@@ -185,26 +185,28 @@ class Route
      */
     public function call(Router $router)
     {
+        // Create request
         $request = new Request($_SERVER['REQUEST_METHOD']);
         $this->_setRequestData($request);
 
+        // Create response
         $response = new Response($this);
 
         // If there are errors with token : generate error
         $needToken = $this->needToken();
         if (!empty($needToken["error"])) {
-            return $response->render($needToken["error"])->toJson();
+            return $response->fromApi($needToken["error"])->toJson();
         }
 
         // If there are errors with data bodies : generate error
         $bodies = $this->checkBodies();
         if (!empty($bodies["error"])) {
-            return $response->render($bodies["error"], $bodies["key"])->toJson();
+            return $response->fromApi($bodies["error"], $bodies["key"])->toJson();
         }
 
-        $token = Utils::getHeader('X-Auth-Token');
+        $token = Utils::getHeader("X-Auth-Token");
         if (!empty($token)) {
-            $request->setToken($token);
+            $request->getHeaders()->add($token, "X-Auth-Token");
         }
 
         // Request - Response - Routes
@@ -230,15 +232,15 @@ class Route
     private function _setRequestData(Request $request)
     {
         if (in_array($request->getMethod(), ['PUT', 'PATCH'])) {
-            $request->setBodies(Utils::parse_http_put());
+            $request->setBody( new Collection((array) Utils::parse_http_put()) );
         } else if ($request->getMethod() === 'POST') {
-            $request->setBodies((object) $_POST);
+            $request->setBody( new Collection($_POST) );
         }
 
-        $request->setParams((object) $this->_matches);
+        $request->setParams( new Collection($this->_matches) );
 
         if (!empty($_FILES)) {
-            $request->setFiles((object) $_FILES);
+            $request->setFiles( new Collection($_FILES) );
         }
 
 

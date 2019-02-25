@@ -1,5 +1,6 @@
 <?php
 namespace Controllers;
+use DusanKasan\Knapsack\Collection;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
 use Kernel\Tools\Utils;
@@ -19,10 +20,13 @@ class Example extends Controller
         //$response->setData(['slug' => $request->getParams()->slug, 'id' => $request->getParams()->id]);
 
         $response->getBody()
-            ->add("slug", $request->getParams()->slug)
-            ->add("id", $request->getParams()->id);
+            ->add("test", "slug");
 
-        return $response->fromApi("S_G001")->toYaml();
+        $collection = new \Kernel\Tools\Collection\Collection(["test2", "blabla"]);
+        $collection->blabla("test");
+
+
+        return $response->fromApi("S_G001")->toJson();
     }
 
     /**

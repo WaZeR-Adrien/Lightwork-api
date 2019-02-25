@@ -4,12 +4,18 @@ namespace Kernel\Http;
 use GreenCape\Xml\Converter;
 use Kernel\Logs\Log;
 use Kernel\Router\Route;
-use Kernel\Tools\Collection;
+use Kernel\Tools\Collection\Collection;
 use Kernel\Twig;
 use Symfony\Component\Yaml\Yaml;
 
 class Response
 {
+    /**
+     * Http API code
+     * @var ApiCode
+     */
+    private $apiCode;
+
     /**
      * Headers Collection
      * @var Collection
@@ -43,8 +49,16 @@ class Response
     {
         $this->route = $route;
         $this->headers = new Collection();
-        $this->headers->add("Content-Type", $contentType);
+        $this->headers->add($contentType, "Content-Type");
         $this->body = new Collection();
+    }
+
+    /**
+     * @return ApiCode
+     */
+    public function getApiCode()
+    {
+        return $this->apiCode;
     }
 
     /**
@@ -98,9 +112,8 @@ class Response
     /**
      * Add the event in the logs
      * @param string $key
-     * @param ApiCode $apiCode
      */
-    private function addEventLog($key, $apiCode)
+    private function addEventLog($key)
     {
         $date = date('d/m/Y H:i:s');
 
@@ -108,10 +121,10 @@ class Response
 
         // Create new log
         $log = new Log(
-            $apiCode->getCode(),
+            $this->apiCode->getCode(),
             $key,
             $date,
-            $apiCode->getStatus(),
+            $this->apiCode->getStatus(),
             (null != $this->route) ? $this->route->getMethod() : "",
             (null != $this->route) ? $this->route->getEndpoint() : "",
             $ip
@@ -133,27 +146,27 @@ class Response
         $type = $code[0] == "S" ? "success" : "error";
 
         // Create new response code
-        $apiCode = new ApiCode($code);
+        $this->apiCode = new ApiCode($code);
 
         if (null != $key) {
             // It's the target key (when there are a problem for example)
-            $apiCode->setMessage(
-                preg_replace('/:key/', $key, $apiCode->getMessage())
+            $this->apiCode->setMessage(
+                preg_replace('/:key/', $key, $this->apiCode->getMessage())
             );
         }
 
         // Store error in logs
         if ($type == "error") {
-            self::addEventLog($key, $apiCode);
+            self::addEventLog($key);
         }
 
         // Init the content by concatenating of success/error with responseCode and of data
         $body = new Collection();
 
-        $body->add($type, $apiCode->jsonSerialize());
+        $body->add($this->apiCode->jsonSerialize(), $type);
 
         if (!$this->body->isEmpty()) {
-            $body->add("data", $this->body->getAll());
+            $body->add($this->body->getAll(), "data");
         }
 
         // Replace body
@@ -168,7 +181,7 @@ class Response
     public function toJson()
     {
         // Set Content Type to JSON
-        $this->headers->add("Content-Type", "application/json");
+        $this->headers->add("application/json", "Content-Type");
 
         // Convert the content to JSON
         $this->content =
@@ -183,11 +196,14 @@ class Response
     public function toXml()
     {
         // Set Content Type to XML
-        $this->headers->add("Content-Type", "text/xml; charset=UTF-8");
+        $this->headers->add("text/xml; charset=UTF-8", "Content-Type");
+
+        // Recursive cast
+        $body = json_decode(json_encode($this->body->getAll()), true);
 
         // Convert the content to XML
         $this->content =
-            new Converter((array) $this->body->getAll());
+            new Converter($body);
 
         return $this;
     }
@@ -198,7 +214,7 @@ class Response
     public function toYaml()
     {
         // Set Content Type to YAML
-        $this->headers->add("Content-Type", "text/yaml");
+        $this->headers->add("text/yaml", "Content-Type");
 
         // Convert the content to YAML
         $this->content =
@@ -217,7 +233,7 @@ class Response
     public function toView($view)
     {
         // Set Content Type to HTML
-        $this->headers->add("Content-Type", "text/html; charset=UTF-8");
+        $this->headers->add("text/html; charset=UTF-8", "Content-Type");
 
         $twig = Twig::getInstance();
 

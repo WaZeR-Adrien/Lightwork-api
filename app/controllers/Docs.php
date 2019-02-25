@@ -19,15 +19,14 @@ class Docs extends Controller
      */
     public static function homePage(Request $request, Response $response, $routes)
     {
-        $response->setData([
-            'description' => self::getDescription(),
-            'httpRequests' => self::getHttpRequests(),
-            'responseCodes' => self::getResponseCodes(),
-            'regex' => Config::get('regex'),
-            'refs' => self::getRefs($routes)
-        ]);
+        $response->getBody()
+            ->add(self::getDescription(), "description")
+            ->add(self::getHttpRequests(), "httpRequests")
+            ->add(self::getApiCodes(), "responseCodes")
+            ->add(Config::get('regex'), "regex")
+            ->add(self::getRefs($routes), "refs");
 
-        $response->view('home');
+        return $response->toView('home');
     }
 
     /**
@@ -42,15 +41,14 @@ class Docs extends Controller
      */
     public static function routesPage(Request $request, Response $response, $routes)
     {
-        $response->setData([
-            'description' => self::getDescription(),
-            'httpRequests' => self::getHttpRequests(),
-            'responseCodes' => self::getResponseCodes(),
-            'regex' => Config::get('regex'),
-            'refs' => self::getRefs($routes)
-        ]);
+        $response->getBody()
+            ->add(self::getDescription(), "description")
+            ->add(self::getHttpRequests(), "httpRequests")
+            ->add(self::getApiCodes(), "responseCodes")
+            ->add(Config::get('regex'), "regex")
+            ->add(self::getRefs($routes), "refs");
 
-        $response->view('routes');
+        return $response->toView('routes');
     }
 
     /**
@@ -89,7 +87,7 @@ class Docs extends Controller
      */
     private static function addErrorToRoute($code, $key = null)
     {
-        $responseCodes = self::getResponseCodes();
+        $responseCodes = self::getApiCodes();
 
         foreach ($responseCodes[1] as $resCode => $status) {
             if ($resCode == $code) {
@@ -132,13 +130,14 @@ class Docs extends Controller
      * List of response codes (success and error)
      * @return array
      */
-    private static function getResponseCodes()
+    private static function getApiCodes()
     {
-        $responseCodes = Config::get('responseCode');
+        $apiCodes = Config::get('apiCode');
 
         $successCodes = [];
         $errorCodes = [];
-        foreach ($responseCodes as $code => $status) {
+        foreach ($apiCodes as $code => $status) {
+
             if (preg_match('#_G#', $code)) {
                 $status['method'] = 'get';
             } elseif (preg_match('#_PO#', $code)) {

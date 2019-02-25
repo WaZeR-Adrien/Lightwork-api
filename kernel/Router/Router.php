@@ -99,7 +99,7 @@ class Router
                         }
 
                         // Set Https status code
-                        //http_response_code($res->getResponseCode()->getStatus());
+                        http_response_code($res->getApiCode()->getStatus());
 
                         die($res->getContent());
                     } else {
@@ -117,15 +117,15 @@ class Router
             if ($e->getCode() === 1) {
                 $res = new \Kernel\Http\Response();
 
-                $res->render("E_A001")->toJson();
+                $res->fromApi("E_A001")->toJson();
 
                 // Set Content Type
-                header("Content-Type:" . $res->getHeaders()->getByKey("Content-Type"));
+                header("Content-Type:" . $res->getHeaders()->get("Content-Type"));
 
                 // Set Https status code
-                http_response_code($res->getResponseCode()->getStatus());
+                http_response_code($res->getApiCode()->getStatus());
 
-                die($res->getBody()->getContent());
+                die($res->getContent());
             }
             else {
                 die($e->getMessage());

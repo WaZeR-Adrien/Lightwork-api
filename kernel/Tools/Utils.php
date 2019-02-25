@@ -3,6 +3,7 @@ namespace Kernel\Tools;
 
 use Controllers\Controller;
 use Kernel\Config;
+use Symfony\Component\Yaml\Yaml;
 
 class Utils
 {
@@ -235,6 +236,19 @@ class Utils
                 return ["error" => "E_A005", "key" => $v];
             }
         }
+    }
+
+    /**
+     * Allow to get element(s) of the config.yml
+     * @param null $element
+     * @return mixed
+     */
+    public static function getConfigElement($element = null)
+    {
+        $path = "../kernel/config.yml";
+
+        return (null != $element) ?
+            Yaml::parseFile($path)[$element] : Yaml::parseFile($path);
     }
 
     /**

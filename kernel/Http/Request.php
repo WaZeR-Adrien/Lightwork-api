@@ -1,6 +1,8 @@
 <?php
 namespace Kernel\Http;
 
+use Kernel\Tools\Collection\Collection;
+
 class Request
 {
     /**
@@ -10,26 +12,26 @@ class Request
     private $method;
 
     /**
-     * Params of request
-     * @var object
+     * Params Collection
+     * @var Collection
      */
     private $params;
-
+    
     /**
-     * Token of request
-     * @var string
+     * Headers Collection
+     * @var Collection
      */
-    private $token = null;
+    private $headers;
 
     /**
-     * Bodies data of request
-     * @var object
+     * Body Collection
+     * @var Collection
      */
-    private $bodies;
+    private $body;
 
     /**
-     * Files of request
-     * @var object
+     * Files Collection
+     * @var Collection
      */
     private $files;
 
@@ -46,6 +48,7 @@ class Request
     public function __construct($method)
     {
         $this->method = $method;
+        $this->params = $this->headers = $this->body = $this->files = new Collection();
     }
 
     /**
@@ -65,7 +68,7 @@ class Request
     }
 
     /**
-     * @return object
+     * @return Collection
      */
     public function getParams()
     {
@@ -73,31 +76,47 @@ class Request
     }
 
     /**
-     * @param object $params
+     * @param Collection $params
      */
-    public function setParams($params)
+    public function setParams(Collection $params)
     {
         $this->params = $params;
     }
 
     /**
-     * @return object
+     * @return Collection
      */
-    public function getBodies()
+    public function getHeaders()
     {
-        return $this->bodies;
+        return $this->headers;
     }
 
     /**
-     * @param object $bodies
+     * @param Collection $headers
      */
-    public function setBodies($bodies)
+    public function setHeaders(Collection $headers)
     {
-        $this->bodies = $bodies;
+        $this->headers = $headers;
     }
 
     /**
-     * @return object
+     * @return Collection
+     */
+    public function getBody()
+    {
+        return $this->body;
+    }
+
+    /**
+     * @param Collection $body
+     */
+    public function setBody(Collection $body)
+    {
+        $this->body = $body;
+    }
+
+    /**
+     * @return Collection
      */
     public function getFiles()
     {
@@ -105,9 +124,9 @@ class Request
     }
 
     /**
-     * @param object $files
+     * @param Collection $files
      */
-    public function setFiles($files)
+    public function setFiles(Collection $files)
     {
         $this->files = $files;
     }
@@ -126,21 +145,5 @@ class Request
     public function setEndpoint($endpoint)
     {
         $this->endpoint = $endpoint;
-    }
-
-    /**
-     * @return string
-     */
-    public function getToken()
-    {
-        return $this->token;
-    }
-
-    /**
-     * @param string $token
-     */
-    public function setToken($token)
-    {
-        $this->token = $token;
     }
 }
