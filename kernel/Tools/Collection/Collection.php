@@ -1,5 +1,5 @@
 <?php
-namespace Kernel\Tools;
+namespace Kernel\Tools\Collection;
 
 class Collection
 {
@@ -9,13 +9,17 @@ class Collection
      */
     private $items = [];
 
+    private $alias = [
+        "count" => "length", "all" => "getAll", "first" => "getFirst", "last" => "getLast"
+    ];
+
     /**
      * Collection constructor.
      * @param array $firstitems
      */
-    public function __construct($firstitems = [])
+    public function __construct($firstItems = [])
     {
-        $this->items = $firstitems;
+        $this->items = $firstItems;
     }
 
 
@@ -38,33 +42,73 @@ class Collection
     }
 
     /**
-     * Check if the collection contains a value for this key
-     * Or directly the value without specific key
-     * @param mixed $keyOrValue
-     * @return bool
+     * Get the sum of values
+     * @param null $key
+     * @return int
      */
-    public function contains($keyOrValue)
+    public function sum($key = null)
     {
-        return !empty($this->items[$keyOrValue]) || in_array($keyOrValue, $this->items);
+        $sum = 0;
+
+        foreach ($this->items as $item) {
+
+            if (is_array($item) && null != $key) {
+                foreach ($item as $subKey => $subItem) {
+
+                    if ($subKey == $key && is_int($subItem)) { $sum += $subItem; }
+
+                }
+            } elseif (is_int($item)) {
+                $sum += $item;
+            }
+
+        }
+
+        return $sum;
     }
 
+    /**
+     * Check if the collection contains the value
+     * @param $value
+     * @return bool
+     */
+    public function contains($value)
+    {
+        return in_array($value, $this->items);
+    }
+
+    /**
+     * Check if the key exists in the collection
+     * @param $key
+     * @return bool
+     */
     public function keyExists($key)
     {
-        return isset($this->items[$key]);
+        return array_key_exists($key, $this->items);
+    }
+
+    /**
+     * Get all keys
+     * @return array
+     */
+    public function keys()
+    {
+        return array_keys($this->items);
     }
 
     /**
      * Add a new value in the collection with or without key
-     * @param string|null $key
      * @param mixed $value
+     * @param string|null $key
      * @return Collection
+     * @throws KeyAlreadyUseException
      */
     public function add($value, $key = null)
     {
         if (null != $key) {
 
-            if (isset($this->items[$key])) {
-                throw new CollectionException("Key $key already in use.");
+            if ($this->keyExists($key, $this->items)) {
+                throw new KeyAlreadyUseException("Key $key already in use.");
             } else {
                 $this->items[$key] = $value;
             }
@@ -85,7 +129,7 @@ class Collection
     public function push(Collection $collection)
     {
         foreach ($collection->getAll() as $key => $value) {
-            if (isset($this->items[$key])) {
+            if (!$this->keyExists($key)) {
                 $this->items[$key] = $value;
             }
         }
@@ -109,38 +153,40 @@ class Collection
     }
 
     /**
-     * Add a new value in the collection with or withour key
+     * Add a new value in the collection with or without key
      * @param string $key
      * @param mixed $value
      * @return Collection
+     * @throws KeyAlreadyUseException
      */
     public function update($key, $value)
     {
-        if (array_key_exists($key, $this->items)) {
+        if ($this->keyExists($key, $this->items)) {
             $this->items[$key] = $value;
         } else {
-            throw new CollectionException("The key $key does not exist in the collection");
+            throw new KeyAlreadyUseException("The key $key does not exist in the collection.");
         }
 
         return $this;
     }
 
     /**
-     * Get value by key
+     * Get value of the collection with the key
      * @param string|int $key
      * @return mixed
+     * @throws KeyAlreadyUseException
      */
     public function get($key)
     {
-        if (array_key_exists($key, $this->items)) {
+        if ($this->keyExists($key, $this->items)) {
             return $this->items[$key];
         } else {
-            throw new CollectionException("The key $key does not exist in the collection");
+            throw new KeyAlreadyUseException("The key $key does not exist in the collection.");
         }
     }
 
     /**
-     * Get all items
+     * Get all items of the collection
      * @return array
      */
     public function getAll()
@@ -149,13 +195,36 @@ class Collection
     }
 
     /**
+     * Get the first item of the collection
+     * @return mixed|null
+     */
+    public function getFirst()
+    {
+        if (empty($this->items)) { return null; }
+
+        foreach ($this->items as $item) {
+            return $item;
+        }
+    }
+
+    /**
+     * Get the last item of the collection
+     * @return mixed
+     */
+    public function getLast()
+    {
+        return !empty($this->items) ? end($this->items) : null;
+    }
+
+    /**
      * Drop value by key or directly by value
      * @param mixed $keyOrValue
      * @return Collection
+     * @throws KeyAlreadyUseException
      */
     public function drop($keyOrValue)
     {
-        if (array_key_exists($keyOrValue, $this->items)) {
+        if ($this->keyExists($keyOrValue, $this->items)) {
             unset($this->items[$keyOrValue]);
         } elseif (in_array($keyOrValue, $this->items)) {
 
@@ -166,8 +235,21 @@ class Collection
             }
 
         } else {
-            throw new CollectionException("The key $keyOrValue does not exist in the collection");
+            throw new KeyAlreadyUseException("The key $keyOrValue does not exist in the collection.");
         }
+
+        return $this;
+    }
+
+    /**
+     * Erase a part of the collection
+     * @param int $start
+     * @param null|int $length
+     * @return $this
+     */
+    public function slice($start, $length = null)
+    {
+        array_slice($this->items, $start, $length);
 
         return $this;
     }
@@ -184,11 +266,40 @@ class Collection
     }
 
     /**
-     * Get all keys
-     * @return array
+     * Reverse the collection items
+     * @return Collection
      */
-    public function keys()
+    public function reverse()
     {
-        return array_keys($this->items);
+        return new self(array_reverse($this->items, true));
+    }
+
+    /**
+     * @param callable $callback
+     * @return Collection
+     */
+    public function map(callable $callback)
+    {
+        $keys = array_keys($this->items);
+
+        $items = array_map($callback, $this->items, $keys);
+
+        return new self(array_combine($keys, $items));
+    }
+
+    /**
+     * Call a method with the alias
+     * @param $name
+     * @param $args
+     * @return mixed
+     * @throws MethodDoesNotExistsException
+     */
+    public function __call($name, $args)
+    {
+        if (array_key_exists($name, $this->alias)) {
+            return call_user_func_array([$this, $this->alias[$name]], $args);
+        }
+
+        throw new MethodDoesNotExistsException("Method or alias $name does not exist.");
     }
 }

@@ -1,7 +1,7 @@
 <?php
-namespace Kernel\Tools;
+namespace Kernel\Tools\Collection;
 
-class CollectionException extends \Exception
+class KeyAlreadyUseException extends \Exception
 {
 
 }
