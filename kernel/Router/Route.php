@@ -15,64 +15,50 @@ class Route
      * Method
      * @var string
      */
-    private $_method;
+    private $method;
 
     /**
      * Endpoint
      * @var string
      */
-    private $_endpoint;
+    private $endpoint;
 
     /**
      * Method / function to call
      * Ex: MyController#myMethod
      * @var string
      */
-    private $_callable;
+    private $callable;
 
     /**
      * Matches params
      * @var array
      */
-    private $_matches = [];
+    private $matches = [];
 
     /**
-     * Params
+     * Arguments
      * @var array
      */
-    private $_params = [];
+    private $args = [];
 
     /**
      * Bodies
      * @var array
      */
-    private $_bodies = [];
+    private $bodies = [];
 
     /**
      * Name / Description for the documentation
      * @var string
      */
-    private $_name;
+    private $name;
 
     /**
      * Need token
      * @var boolean
      */
-    private $_needToken;
-
-    /**
-     * Need role
-     * Ex N°1: ['>' => 2]
-     * Role superior to 2
-     *
-     * Ex N°2: ['>' => 1, '<=' => 4]
-     * Role superior to 1 and superior or equal to 4
-     *
-     * Ex N°3: ['=' => 3]
-     * Role equal to 3
-     * @var array
-     */
-    private $_needRole = [];
+    private $needToken;
 
 
     /**
@@ -82,35 +68,33 @@ class Route
      * @param $callable
      * @param $name
      * @param $needToken
-     * @param $needRole
-     * @param $params
+     * @param $args
      * @param $bodies
      */
-    public function __construct($method, $endpoint, $callable, $name, $needToken, $needRole, $params, $bodies)
+    public function __construct($method, $endpoint, $callable, $name, $needToken, $args, $bodies)
     {
-        $this->_method = $method;
-        $this->_endpoint = trim($endpoint, '/');
-        $this->_callable = $callable;
-        $this->_name = $name;
-        $this->_needToken = $needToken;
-        $this->_needRole = $needRole;
-        $this->_bodies = $bodies;
+        $this->method = $method;
+        $this->endpoint = trim($endpoint, '/');
+        $this->callable = $callable;
+        $this->name = $name;
+        $this->needToken = $needToken;
+        $this->bodies = $bodies;
 
-        $this->_params($params);
+        $this->editArgs($args);
     }
 
     /**
      * Set params
-     * @param $params
+     * @param $args
      */
-    private function _params($params)
+    private function editArgs($args)
     {
-        if (!empty($params)) {
-            foreach ($params as $key => $value) {
+        if (!empty($args)) {
+            foreach ($args as $key => $value) {
 
                 $value = Config::setRegex(ucfirst($value));
 
-                $this->_params[$key] = str_replace('(', '(?:', $value);
+                $this->args[$key] = str_replace('(', '(?:', $value);
             }
         }
     }
@@ -123,7 +107,7 @@ class Route
     public function match($currentUrl)
     {
         $currentUrl = trim($currentUrl, '/');
-        $endpoint = preg_replace_callback('#:([\w]+)#', [$this, '_paramMatch'], $this->_endpoint);
+        $endpoint = preg_replace_callback('#:([\w]+)#', [$this, 'argMatch'], $this->endpoint);
         $reg = "#^$endpoint$#i";
 
         // Get values
@@ -133,7 +117,7 @@ class Route
         array_shift($matchesValues);
 
         // Get keys
-        preg_match_all('#:([\w]+)#', $this->_endpoint, $matchesKeys);
+        preg_match_all('#:([\w]+)#', $this->endpoint, $matchesKeys);
 
         $matchesKeys = $matchesKeys[1];
         $matches = [];
@@ -142,7 +126,7 @@ class Route
         for ($i = 0; $i < count($matchesKeys); $i++) {
             $matches[$matchesKeys[$i]] = $matchesValues[$i];
         }
-        $this->_matches = $matches;
+        $this->matches = $matches;
         return true;
     }
 
@@ -150,10 +134,10 @@ class Route
      * @param $match
      * @return string
      */
-    private function _paramMatch($match)
+    private function argMatch($match)
     {
-        if (isset($this->_params[$match[1]])) {
-            $reg = '(' . $this->_params[$match[1]] . ')';
+        if (isset($this->args[$match[1]])) {
+            $reg = '(' . $this->args[$match[1]] . ')';
             return $reg;
         }
         $reg = '([^/]+)';
@@ -169,7 +153,7 @@ class Route
     {
         // Create request
         $request = new Request($_SERVER['REQUEST_METHOD']);
-        $this->_setRequestData($request);
+        $this->setRequestData($request);
 
         // Create response
         $response = new Response($this);
@@ -194,15 +178,14 @@ class Route
         // Request - Response - Routes
         $data = [$request, $response, $router->getAllRoutes()];
 
-        if (is_string($this->_callable)) {
-            $params = explode('#', $this->_callable);
+        if (is_string($this->callable)) {
+            $params = explode('#', $this->callable);
             $controller = "Controllers\\$params[0]";
-            $controller = new $controller();
 
-            return call_user_func_array([$controller, $params[1]], $data);
+            return call_user_func_array([new $controller(), $params[1]], $data);
         }
         else {
-            return call_user_func_array($this->_callable, $data);
+            return call_user_func_array($this->callable, $data);
         }
     }
 
@@ -211,7 +194,7 @@ class Route
      * @param Request $request
      * @return Request
      */
-    private function _setRequestData(Request $request)
+    private function setRequestData(Request $request)
     {
         if (in_array($request->getMethod(), ['PUT', 'PATCH'])) {
             $request->setBody( new Collection((array) Utils::parse_http_put()) );
@@ -219,7 +202,7 @@ class Route
             $request->setBody( new Collection($_POST) );
         }
 
-        $request->setParams( new Collection($this->_matches) );
+        $request->setParams( new Collection($this->matches) );
 
         if (!empty($_FILES)) {
             $request->setFiles( new Collection($_FILES) );
@@ -236,7 +219,7 @@ class Route
      */
     public function getUrl($params)
     {
-        $endpoint = $this->_endpoint;
+        $endpoint = $this->endpoint;
         foreach ($params as $k => $v) {
             $endpoint = str_replace(":$k", $v, $endpoint);
         }
@@ -251,7 +234,7 @@ class Route
     {
         $errorToken = false;
 
-        if ($this->_needToken === true) {
+        if ($this->needToken === true) {
             // If token does not exist : generate error
             if (empty(Utils::getHeader('X-Auth-Token'))) {
 
@@ -276,52 +259,7 @@ class Route
             }
 
             if ($errorToken) return ["error" => "E_A002"];
-            elseif (!empty($this->_needRole)) return $this->needRole($token);
         }
-    }
-
-    /**
-     * Create an error if user does not has valid role
-     * Use if the token is valid
-     * Example use :
-     *  ['>' => 2] -> the user must to be superior to the role 2
-     * @param $token
-     */
-    public function needRole($token)
-    {
-        $user = User::getById($token->user_id);
-        $id = $user->role_id;
-        $errorRole = false;
-
-        foreach ($this->_needRole as $k => $v) {
-
-            switch ($k) {
-
-                case '>':
-                    if ($id <= $v) $errorRole = true;
-                    break;
-
-                case '>=':
-                    if ($id < $v) $errorRole = true;
-                    break;
-
-                case '<':
-                    if ($id >= $v) $errorRole = true;
-                    break;
-
-                case '<=':
-                    if ($id > $v) $errorRole = true;
-                    break;
-
-                case '=':
-                    if ($id != $v) $errorRole = true;
-                    break;
-
-            }
-
-        }
-
-        if ($errorRole) return ["error" => "E_A003"];
     }
 
     /**
@@ -341,7 +279,7 @@ class Route
         $requireKeys = [];
         $requireTypes = [];
 
-        foreach ($this->_bodies as $key => $type) {
+        foreach ($this->bodies as $key => $type) {
             $nameOfKey = ($key[0] === '*') ? substr($key, 1, strlen($key)) : $key;
 
             if ($key[0] === '*' || property_exists($data, $nameOfKey)) {
@@ -359,7 +297,7 @@ class Route
      */
     public function getMethod()
     {
-        return $this->_method;
+        return $this->method;
     }
 
     /**
@@ -367,7 +305,7 @@ class Route
      */
     public function getEndpoint()
     {
-        return $this->_endpoint;
+        return $this->endpoint;
     }
 
     /**
@@ -375,7 +313,7 @@ class Route
      */
     public function getCallable()
     {
-        return $this->_callable;
+        return $this->callable;
     }
 
     /**
@@ -383,15 +321,15 @@ class Route
      */
     public function getMatches()
     {
-        return $this->_matches;
+        return $this->matches;
     }
 
     /**
      * @return array
      */
-    public function getParams()
+    public function getArgs()
     {
-        return $this->_params;
+        return $this->args;
     }
 
     /**
@@ -399,7 +337,7 @@ class Route
      */
     public function getBodies()
     {
-        return $this->_bodies;
+        return $this->bodies;
     }
 
     /**
@@ -407,7 +345,7 @@ class Route
      */
     public function getName()
     {
-        return $this->_name;
+        return $this->name;
     }
 
     /**
@@ -415,7 +353,7 @@ class Route
      */
     public function getNeedToken()
     {
-        return $this->_needToken;
+        return $this->needToken;
     }
 
     /**
