@@ -1,9 +1,13 @@
 <?php
 namespace Controllers;
 
+use function Couchbase\basicEncoderV1;
+use Jasny\PhpdocParser\PhpdocParser;
+use Jasny\PhpdocParser\Set\PhpDocumentor;
 use Kernel\Config;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
+use Kernel\Tools\Utils;
 
 class Docs extends Controller
 {
@@ -62,17 +66,28 @@ class Docs extends Controller
 
         foreach ($routes as $route) {
             if (!in_array($route->getEndpoint(), ['docs', 'docs/routes'])) {
+
+                $params = explode('#', $route->getCallable());
+                $controller = "\Controllers\\$params[0]";
+
+                $annotations = self::getPhpDoc($controller, $params[1]);
+
                 $ref = explode('/', $route->getEndpoint())[0];
 
-                $route->errors = [];
-                if ($route->getNeedToken()) $route->errors[] = self::addErrorToRoute('E_A002');
-                if (!empty($route->getNeedRole())) $route->errors[] = self::addErrorToRoute('E_A003');
+                $annotations["name"] = $route->getName();
+                $annotations["endpoint"] = $route->getEndpoint();
+                $annotations["method"] = $route->getMethod();
 
-                foreach ($route->getBodies() as $key => $type) {
-                    if ($key[0] === "*") $route->errors[] = self::addErrorToRoute('E_A005', substr($key, 1, strlen($key)));
+                switch ($annotations["render"]) {
+                    case "json":
+                        $annotations["contentType"] = "application/json";
+                        break;
+
+                    default:
+                        $annotations["contentType"] = "text/" . $annotations["render"];
                 }
 
-                $refs[$ref][] = $route;
+                $refs[$ref][] = $annotations;
             }
         }
 
@@ -136,24 +151,24 @@ class Docs extends Controller
 
         $successCodes = [];
         $errorCodes = [];
-        foreach ($apiCodes as $code => $status) {
+        foreach ($apiCodes as $code => $content) {
 
             if (preg_match('#_G#', $code)) {
-                $status['method'] = 'get';
+                $content['method'] = 'get';
             } elseif (preg_match('#_PO#', $code)) {
-                $status['method'] = 'post';
+                $content['method'] = 'post';
             } elseif (preg_match('#_PU#', $code)) {
-                $status['method'] = 'put';
+                $content['method'] = 'put';
             } elseif (preg_match('#_D#', $code)) {
-                $status['method'] = 'delete';
+                $content['method'] = 'delete';
             } elseif (preg_match('#_A#', $code)) {
-                $status['method'] = 'all';
+                $content['method'] = 'all';
             }
 
             if ($code[0] == 'S') {
-                $successCodes[$code] = $status;
+                $successCodes[$code] = $content;
             } else {
-                $errorCodes[$code] = $status;
+                $errorCodes[$code] = $content;
             }
         }
 
@@ -173,4 +188,38 @@ class Docs extends Controller
         Also, in this home page, you can see all methods of HTTPs requests allowed in the API at right and at bottom the success or error codes to which refer to.";
     }
 
+    /**
+     * @param $class
+     * @param $method
+     * @return array
+     * @throws \ReflectionException
+     */
+    public static function getPhpDoc($class, $method)
+    {
+        $doc = (new \ReflectionMethod($class, $method))->getDocComment();
+
+        $additionalTags = [];
+
+        foreach (Utils::getConfigElement("docTags") as $key => $value) {
+            $value = "\Jasny\PhpdocParser\Tag\\$value";
+            $additionalTags[] = new $value($key);
+        }
+
+        $tags = PhpDocumentor::tags()->with($additionalTags);
+
+        $parser = new PhpdocParser($tags);
+        $annotations = $parser->parse($doc);
+
+        if (isset($annotations["codes"])) {
+            $codes = [];
+
+            foreach ($annotations["codes"] as $code) {
+                $codes[$code] = Utils::getConfigElement("apiCode")[$code];
+            }
+
+            $annotations["codes"] = $codes;
+        }
+
+        return $annotations;
+    }
 }

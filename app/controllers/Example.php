@@ -11,6 +11,10 @@ class Example extends Controller
     /**
      * Render slug and id passed in GET HTTP REQUEST
      * Method : GET
+     * @token
+     * @args slug=String, id=Int
+     * @codes S_G001, E_A002, E_A003
+     * @render "json"
      * @param Request $request
      * @param Response $response
      * @return Response
@@ -21,10 +25,6 @@ class Example extends Controller
 
         $response->getBody()
             ->add("test", "slug");
-
-        $collection = new \Kernel\Tools\Collection\Collection(["test2", "blabla"]);
-        $collection->blabla("test");
-
 
         return $response->fromApi("S_G001")->toJson();
     }

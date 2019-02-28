@@ -143,5 +143,13 @@ apiCode:
 token:
   expire: 604800 # 7 days in seconds (set NULL if you want no expiration token)
 
+docTags:
+  args: MapTag
+  bodies: MapTag
+  token: FlagTag
+  role: ArrayTag
+  codes: ArrayTag
+  render: WordTag
+
 path:
   foo: bar

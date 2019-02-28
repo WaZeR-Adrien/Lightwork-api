@@ -37,13 +37,6 @@ class Route
     private $_matches = [];
 
     /**
-     * Type of params
-     * Ex: ['id' => 'Int']
-     * @var array
-     */
-    private $_typeParams = [];
-
-    /**
      * Params
      * @var array
      */
@@ -118,17 +111,6 @@ class Route
                 $value = Config::setRegex(ucfirst($value));
 
                 $this->_params[$key] = str_replace('(', '(?:', $value);
-            }
-        }
-
-        // Set the type of params (use for the doc)
-        preg_match_all('#:([\w]+)#', $this->_endpoint, $urlParams);
-
-        foreach ($urlParams[1] as $param) {
-            if (array_key_exists($param, $params)) {
-                $this->_typeParams[$param] = $params[$param];
-            } else {
-                $this->_typeParams[$param] = 'String';
             }
         }
     }
@@ -402,14 +384,6 @@ class Route
     public function getMatches()
     {
         return $this->_matches;
-    }
-
-    /**
-     * @return array
-     */
-    public function getTypeParams()
-    {
-        return $this->_typeParams;
     }
 
     /**
