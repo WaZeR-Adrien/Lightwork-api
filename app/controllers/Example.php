@@ -9,66 +9,74 @@ class Example extends Controller
 {
 
     /**
-     * Render slug and id passed in GET HTTP REQUEST
-     * Method : GET
+     * @name Get slug and id
      * @token
-     * @args slug=String, id=Int
-     * @codes S_G001, E_A002, E_A003
-     * @render "json"
+     * @codes S_G001
+     * @render json
      * @param Request $request
      * @param Response $response
      * @return Response
      */
     public static function index(Request $request, Response $response)
     {
-        //$response->setData(['slug' => $request->getParams()->slug, 'id' => $request->getParams()->id]);
-
         $response->getBody()
-            ->add("test", "slug");
+            ->add($request->getArgs()->get("slug"), "slug")
+            ->add($request->getArgs()->get("id"), "id");
 
         return $response->fromApi("S_G001")->toJson();
     }
 
     /**
-     * Render all examples
-     * Method : GET
+     * @name Get all examples
+     * @codes S_G001
+     * @render json
      * @param Request $request
      * @param Response $response
      * @return Response
      */
     public static function getAll(Request $request, Response $response)
     {
-        $response->setData(\Models\Example::getAll());
+        $response->setBody(new \Kernel\Tools\Collection\Collection(
+            \Models\Example::getAll()
+        ));
 
-        return $response->render('S_PU001')->toJson();
+        return $response->fromApi('S_G001')->toJson();
     }
 
     /**
-     * Update values to Database
-     * Method : PUT
-     * @param $id
+     * @name Edit an example
+     * @token
+     * @codes S_PU001, E_A005
+     * @render json
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      */
     public static function update(Request $request, Response $response)
     {
-        $example = new \Models\Example($request->getParams()->id);
+        $example = new \Models\Example($request->getArgs()->get("id"));
 
-        $bodies = $request->getBodies();
+        $body = $request->getBody();
 
         if (!empty($example)) {
-            $example->setField1($bodies->field1);
-            $example->setField2($bodies->field2);
-            $example->setField3($bodies->field3);
+            $example->setField1($body->get("field1"));
+            $example->setField2($body->get("field2"));
+            $example->setField3($body->get("field3"));
             $example->store();
 
-            return $response->render('S_PU001')->toJson();
+            return $response->fromApi('S_PU001')->toJson();
         }
 
-        return $response->render('E_A006', 'Example')->toJson();
+        return $response->fromApi('E_A005', 'Example')->toJson();
     }
 
     /**
-     * Add new row to Database
-     * Method : POST
+     * @name Add a new example
+     * @codes S_PO001
+     * @render json
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      */
     public static function add(Request $request, Response $response)
     {
@@ -78,19 +86,22 @@ class Example extends Controller
 
         $example->store();
 
-        return $response->render('S_PO001')->toJson();
+        return $response->fromApi('S_PO001')->toJson();
     }
 
     /**
-     * Delete row to database
-     * Method : DELETE
-     * @param $id
+     * @name Remove an example
+     * @codes S_D001
+     * @render json
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      */
     public static function delete(Request $request, Response $response)
     {
-        $example = new \Models\Example($request->getParams()->id);
+        $example = new \Models\Example($request->getArgs()->get("id"));
         $example->delete();
 
-        return $response->render('S_D001')->toJson();
+        return $response->fromApi('S_D001')->toJson();
     }
 }

@@ -93,6 +93,14 @@ class Response
     }
 
     /**
+     * @param Collection $body
+     */
+    public function setBody($body)
+    {
+        $this->body = $body;
+    }
+
+    /**
      * @return Collection
      */
     public function getBody()
@@ -149,7 +157,7 @@ class Response
             $date,
             $this->getStatus(),
             (null != $this->route) ? $this->route->getMethod() : "",
-            (null != $this->route) ? $this->route->getEndpoint() : "",
+            (null != $this->route) ? $this->route->getPath() : "",
             $ip
         );
 

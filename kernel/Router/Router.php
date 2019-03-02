@@ -19,12 +19,6 @@ class Router
     private $_routes = [];
 
     /**
-     * Name of routes
-     * @var array
-     */
-    private $_namedRoutes = [];
-
-    /**
      * Router constructor.
      * @param string $currentUrl
      */
@@ -37,13 +31,11 @@ class Router
      * Create a group of routes
      * @param string $endpoint
      * @param string $callable
-     * @param boolean $needToken
-     * @param array $needRole
-     * @param array $params
+     * @param array $args
      */
-    public function group($endpoint, $callable, $needToken = null, $needRole = [], $params = [])
+    public function group($endpoint, $callable, $args = [])
     {
-        $group = new Group($endpoint, $needToken, $needRole, $params, $this);
+        $group = new Group($endpoint, $args, $this);
 
         $callable($group);
     }
@@ -52,25 +44,16 @@ class Router
      * @param string $method : GET / POST / PUT / DELETE...
      * @param string $endpoint
      * @param string $callable
-     * @param string $name
-     * @param boolean $needToken
-     * @param array $needRole
-     * @param array $params
+     * @param array $args
      * @param array $bodies
      * @return Route
      */
-    public function add($method, $endpoint, $callable, $name = null, $needToken = null, $needRole = [], $params = [], $bodies = [])
+    public function add($method, $endpoint, $callable, $args = [], $bodies = [])
     {
-        $route = new Route($method, $endpoint, $callable, $name, $needToken, $needRole, $params, $bodies);
+        $route = new Route($method, $endpoint, $callable, $args, $bodies);
 
         $this->_routes[$method][] = $route;
 
-        if (is_string($callable) && is_null($name)) {
-            $name = $callable;
-        }
-        if ($name) {
-            $this->_namedRoutes[$name] = $route;
-        }
         return $route;
     }
 
@@ -132,20 +115,6 @@ class Router
             }
         }
 
-    }
-
-    /**
-     * @param string $name
-     * @param array $params
-     * @return mixed
-     * @throws RouterException
-     */
-    public function url($name, $params = [])
-    {
-        if (!isset($this->_namedRoutes[$name])) {
-            throw new RouterException('No route matches this name');
-        }
-        return $this->_namedRoutes[$name]->getUrl($params);
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 namespace Kernel\Router;
 
+use Controllers\Docs;
 use Kernel\Config;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
@@ -8,6 +9,7 @@ use Kernel\Tools\Collection\Collection;
 use Kernel\Tools\Utils;
 use Models\Auth;
 use Models\User;
+use function PHPSTORM_META\type;
 
 class Route
 {
@@ -21,7 +23,7 @@ class Route
      * Endpoint
      * @var string
      */
-    private $endpoint;
+    private $path;
 
     /**
      * Method / function to call
@@ -43,6 +45,12 @@ class Route
     private $args = [];
 
     /**
+     * Type of arguments
+     * @var array
+     */
+    private $typeArgs = [];
+
+    /**
      * Bodies
      * @var array
      */
@@ -55,36 +63,75 @@ class Route
     private $name;
 
     /**
-     * Need token
+     * If need token
      * @var boolean
      */
-    private $needToken;
+    private $token;
+
+    /**
+     * Codes for the response
+     * @var array
+     */
+    private $codes = [];
+
+    /**
+     * Type of the render (json | xml...)
+     * @var string
+     */
+    private $render;
 
 
     /**
      * Route constructor
      * @param $method
-     * @param $endpoint
+     * @param $path
      * @param $callable
-     * @param $name
-     * @param $needToken
      * @param $args
-     * @param $bodies
      */
-    public function __construct($method, $endpoint, $callable, $name, $needToken, $args, $bodies)
+    public function __construct($method, $path, $callable, $args, $bodies)
     {
         $this->method = $method;
-        $this->endpoint = trim($endpoint, '/');
+        $this->path = trim($path, '/');
         $this->callable = $callable;
-        $this->name = $name;
-        $this->needToken = $needToken;
+        $this->typeArgs = $args;
         $this->bodies = $bodies;
 
         $this->editArgs($args);
+
+        $this->setProperties();
+    }
+
+    private function setProperties()
+    {
+        $params = explode('#', $this->callable);
+        $controller = "\Controllers\\$params[0]";
+
+        $annotations = Docs::getPhpDoc($controller, $params[1]);
+
+        foreach ($annotations as $k => $v) {
+            if (property_exists($this, $k) && empty($this->$k)) {
+
+                $this->$k = $v;
+
+                if ($k == "codes") {
+                    if (isset($annotations["token"]) && !array_key_exists("E_A002", $v)) {
+                        $this->codes["E_A002"] = Utils::getConfigElement("apiCode")["E_A002"];
+                    }
+                }
+            }
+        }
+
+        if (!empty($this->bodies)) {
+            foreach ($this->bodies as $key => $type) {
+                if ($key[0] === '*' && !array_key_exists("E_A004", $this->codes)) {
+                    $this->codes["E_A004"] = Utils::getConfigElement("apiCode")["E_A004"];
+                }
+            }
+        }
     }
 
     /**
-     * Set params
+     * Edit args with regex
      * @param $args
      */
     private function editArgs($args)
@@ -107,7 +154,7 @@ class Route
     public function match($currentUrl)
     {
         $currentUrl = trim($currentUrl, '/');
-        $endpoint = preg_replace_callback('#:([\w]+)#', [$this, 'argMatch'], $this->endpoint);
+        $endpoint = preg_replace_callback('#:([\w]+)#', [$this, 'argMatch'], $this->path);
         $reg = "#^$endpoint$#i";
 
         // Get values
@@ -117,7 +164,7 @@ class Route
         array_shift($matchesValues);
 
         // Get keys
-        preg_match_all('#:([\w]+)#', $this->endpoint, $matchesKeys);
+        preg_match_all('#:([\w]+)#', $this->path, $matchesKeys);
 
         $matchesKeys = $matchesKeys[1];
         $matches = [];
@@ -202,7 +249,7 @@ class Route
             $request->setBody( new Collection($_POST) );
         }
 
-        $request->setParams( new Collection($this->matches) );
+        $request->setArgs( new Collection($this->matches) );
 
         if (!empty($_FILES)) {
             $request->setFiles( new Collection($_FILES) );
@@ -219,7 +266,7 @@ class Route
      */
     public function getUrl($params)
     {
-        $endpoint = $this->endpoint;
+        $endpoint = $this->path;
         foreach ($params as $k => $v) {
             $endpoint = str_replace(":$k", $v, $endpoint);
         }
@@ -234,7 +281,7 @@ class Route
     {
         $errorToken = false;
 
-        if ($this->needToken === true) {
+        if ($this->token === true) {
             // If token does not exist : generate error
             if (empty(Utils::getHeader('X-Auth-Token'))) {
 
@@ -303,9 +350,9 @@ class Route
     /**
      * @return string
      */
-    public function getEndpoint()
+    public function getPath()
     {
-        return $this->endpoint;
+        return $this->path;
     }
 
     /**
@@ -351,9 +398,9 @@ class Route
     /**
      * @return mixed
      */
-    public function getNeedToken()
+    public function getToken()
     {
-        return $this->needToken;
+        return $this->token;
     }
 
     /**
@@ -362,5 +409,53 @@ class Route
     public function getNeedRole()
     {
         return $this->_needRole;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCodes()
+    {
+        return $this->codes;
+    }
+
+    /**
+     * @param array $codes
+     */
+    public function setCodes($codes)
+    {
+        $this->codes = $codes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRender()
+    {
+        return $this->render;
+    }
+
+    /**
+     * @param string $render
+     */
+    public function setRender($render)
+    {
+        $this->render = $render;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTypeArgs()
+    {
+        return $this->typeArgs;
+    }
+
+    /**
+     * @param array $typeArgs
+     */
+    public function setTypeArgs($typeArgs)
+    {
+        $this->typeArgs = $typeArgs;
     }
 }

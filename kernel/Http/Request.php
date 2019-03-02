@@ -15,7 +15,7 @@ class Request
      * Params Collection
      * @var Collection
      */
-    private $params;
+    private $args;
     
     /**
      * Headers Collection
@@ -48,7 +48,7 @@ class Request
     public function __construct($method)
     {
         $this->method = $method;
-        $this->params = $this->headers = $this->body = $this->files = new Collection();
+        $this->args = $this->headers = $this->body = $this->files = new Collection();
     }
 
     /**
@@ -70,17 +70,17 @@ class Request
     /**
      * @return Collection
      */
-    public function getParams()
+    public function getArgs()
     {
-        return $this->params;
+        return $this->args;
     }
 
     /**
-     * @param Collection $params
+     * @param Collection $args
      */
-    public function setParams(Collection $params)
+    public function setArgs(Collection $args)
     {
-        $this->params = $params;
+        $this->args = $args;
     }
 
     /**

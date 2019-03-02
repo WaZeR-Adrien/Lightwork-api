@@ -65,29 +65,11 @@ class Docs extends Controller
         $refs = [];
 
         foreach ($routes as $route) {
-            if (!in_array($route->getEndpoint(), ['docs', 'docs/routes'])) {
+            if (!in_array($route->getPath(), ['docs', 'docs/routes'])) {
 
-                $params = explode('#', $route->getCallable());
-                $controller = "\Controllers\\$params[0]";
+                $ref = explode('/', $route->getPath())[0];
 
-                $annotations = self::getPhpDoc($controller, $params[1]);
-
-                $ref = explode('/', $route->getEndpoint())[0];
-
-                $annotations["name"] = $route->getName();
-                $annotations["endpoint"] = $route->getEndpoint();
-                $annotations["method"] = $route->getMethod();
-
-                switch ($annotations["render"]) {
-                    case "json":
-                        $annotations["contentType"] = "application/json";
-                        break;
-
-                    default:
-                        $annotations["contentType"] = "text/" . $annotations["render"];
-                }
-
-                $refs[$ref][] = $annotations;
+                $refs[$ref][] = $route;
             }
         }
 
@@ -200,9 +182,9 @@ class Docs extends Controller
 
         $additionalTags = [];
 
-        foreach (Utils::getConfigElement("docTags") as $key => $value) {
-            $value = "\Jasny\PhpdocParser\Tag\\$value";
-            $additionalTags[] = new $value($key);
+        foreach (Utils::getConfigElement("docTags") as $k => $v) {
+            $value = "\Jasny\PhpdocParser\Tag\\$v";
+            $additionalTags[] = new $value($k);
         }
 
         $tags = PhpDocumentor::tags()->with($additionalTags);

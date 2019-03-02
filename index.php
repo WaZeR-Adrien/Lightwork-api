@@ -11,36 +11,34 @@ $router = new Router($_GET['url']);
 $router->group('/docs', function (Group $group) {
 
     // Home page
-    $group->add('GET', '', "Docs#homePage", "Documentation");
+    $group->add('GET', '', "Docs#homePage");
 
     // Routes page
-    $group->add('GET', '/routes', "Docs#routesPage", "Documentation");
+    $group->add('GET', '/routes', "Docs#routesPage");
 
 });
 
 // Auth in POST Method. Response : token
 // INFO : To use API with routes protected by token, you need to send the response token in header of all requests : "X-Auth-Token"
-$router->add('POST', '/auth', "Auth#check", "Authentication to the API");
+$router->add('POST', '/auth', "Auth#check");
 
 
 // Group of routes
 $router->group('/examples', function (Group $group) {
 
     // Simple GET Method
-    $group->add('GET', '', "Example#getAll", "Get all Examples");
+    $group->add('GET', '', "Example#getAll");
 
     // GET Method with params
-    $group->add('GET', '/:slug-:id', "Example#index", "Index of Example", null, [], [
+    $group->add('GET', '/:slug-:id', "Example#index", [], [
         'slug' => 'String'
     ]);
 
     // PUT (UPDATE) Method with param
-    $group->add('PUT', '/:id', "Example#update", "Update an Example", true);
+    $group->add('PUT', '/:id', "Example#update");
 
     // POST (INSERT) Method
-    $group->add('POST', '', "Example#add", "Add a new Example", true, [
-        '=' => 3 // Need the role equal to 3
-    ], [], [
+    $group->add('POST', '', "Example#add", [], [
         '*email' => '',
         '*password' => 'String',
         'name' => 'String',
@@ -48,13 +46,10 @@ $router->group('/examples', function (Group $group) {
     ]);
 
     // DELETE Method
-    $group->add('DELETE', '/:id', "Example#delete", "Delete an Example", true, [
-        '>' => 4, // Need the role superior to 4
-        '<=' => 7 // Need the role inferior or equal to 7
-    ]);
+    $group->add('DELETE', '/:id', "Example#delete");
 
 
-}, null, [], [ // Params of routes in this group
+}, [ // Arguments of routes in this group
     'id' => 'Int',
 ]);
 
