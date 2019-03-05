@@ -2,14 +2,11 @@
 
 class User extends \Kernel\Database
 {
-	/** @var int */
+	/** @var string */
 	private $id;
 
 	/** @var string */
-	private $firstName;
-
-	/** @var string */
-	private $lastName;
+	private $username;
 
 	/** @var string */
 	private $email;
@@ -17,12 +14,9 @@ class User extends \Kernel\Database
 	/** @var string */
 	private $password;
 
-	/** @var string */
-	private $role;
-
 
 	/**
-	 * @return int
+	 * @return string
 	 */
 	public function getId()
 	{
@@ -31,7 +25,7 @@ class User extends \Kernel\Database
 
 
 	/**
-	 * @params int id
+	 * @param string id
 	 */
 	public function setId($id)
 	{
@@ -42,36 +36,18 @@ class User extends \Kernel\Database
 	/**
 	 * @return string
 	 */
-	public function getFirstName()
+	public function getUsername()
 	{
-		return $this->firstName;
+		return $this->username;
 	}
 
 
 	/**
-	 * @params string firstName
+	 * @param string username
 	 */
-	public function setFirstName($firstName)
+	public function setUsername($username)
 	{
-		$this->firstName = firstName;
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function getLastName()
-	{
-		return $this->lastName;
-	}
-
-
-	/**
-	 * @params string lastName
-	 */
-	public function setLastName($lastName)
-	{
-		$this->lastName = lastName;
+		$this->username = username;
 	}
 
 
@@ -85,7 +61,7 @@ class User extends \Kernel\Database
 
 
 	/**
-	 * @params string email
+	 * @param string email
 	 */
 	public function setEmail($email)
 	{
@@ -103,29 +79,11 @@ class User extends \Kernel\Database
 
 
 	/**
-	 * @params string password
+	 * @param string password
 	 */
 	public function setPassword($password)
 	{
 		$this->password = password;
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function getRole()
-	{
-		return $this->role;
-	}
-
-
-	/**
-	 * @params string role
-	 */
-	public function setRole($role)
-	{
-		$this->role = role;
 	}
 
 }

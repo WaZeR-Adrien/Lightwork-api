@@ -1,6 +1,6 @@
 <?php
 
-class Comment extends \Kernel\Database
+class Note extends \Kernel\Database
 {
 	/** @var string */
 	private $id;
@@ -12,7 +12,7 @@ class Comment extends \Kernel\Database
 	private $id_movie;
 
 	/** @var string */
-	private $content;
+	private $note;
 
 
 	/**
@@ -72,18 +72,18 @@ class Comment extends \Kernel\Database
 	/**
 	 * @return string
 	 */
-	public function getContent()
+	public function getNote()
 	{
-		return $this->content;
+		return $this->note;
 	}
 
 
 	/**
-	 * @param string content
+	 * @param string note
 	 */
-	public function setContent($content)
+	public function setNote($note)
 	{
-		$this->content = content;
+		$this->note = note;
 	}
 
 }

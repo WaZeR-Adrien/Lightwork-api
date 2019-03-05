@@ -1,6 +1,7 @@
 <?php
-namespace Kernel;
+namespace Kernel\Orm;
 use Controllers\Controller;
+use Kernel\Tools\Utils;
 use PDO;
 
 class Database
@@ -49,8 +50,8 @@ class Database
         if (!is_null(self::$_pdo)) return self::$_pdo;
         try
         {
-            $db = Config::get('database');
-            $pdo = new PDO('mysql:dbname='. $db['db'] .';host='. $db['host'], $db['user'], $db['pw']);
+            $db = Utils::getConfigElement('database');
+            $pdo = new PDO('mysql:dbname='. $db['dbname'] .';host='. $db['host'], $db['user'], $db['password']);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
         catch(\Exception $e)

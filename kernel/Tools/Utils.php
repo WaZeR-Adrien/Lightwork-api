@@ -245,7 +245,7 @@ class Utils
      */
     public static function getConfigElement($element = null)
     {
-        $path = "../kernel/config.yml";
+        $path = "kernel/config.yml";
 
         return (null != $element) ?
             Yaml::parseFile($path)[$element] : Yaml::parseFile($path);

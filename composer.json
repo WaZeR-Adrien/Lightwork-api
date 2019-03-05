@@ -16,7 +16,7 @@
         }
     },
     "scripts": {
-        "generator-models": [
+        "generate-models": [
             "Kernel\\Orm\\GeneratorModels::run"
         ]
     }

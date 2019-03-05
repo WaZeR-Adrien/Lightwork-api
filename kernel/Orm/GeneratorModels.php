@@ -1,6 +1,7 @@
 <?php
-namespace Kernel\Tools;
+namespace Kernel\Orm;
 
+use Kernel\Tools\Utils;
 use Nette\PhpGenerator\Parameter;
 use Nette\PhpGenerator\PhpNamespace;
 
@@ -8,10 +9,10 @@ class GeneratorModels
 {
     public static function run()
     {
-        foreach (\Kernel\Database::getTables() as $table) {
+        foreach (Database::getTables() as $table) {
 
             $table = $table[
-            'Tables_in_' . \Kernel\Config::get('database')['db']
+            'Tables_in_' . Utils::getConfigElement('database')['dbname']
             ];
 
             $tableRenamed = implode(array_map('ucfirst', explode('_', $table)));
@@ -23,12 +24,14 @@ class GeneratorModels
             $class->addExtend("\Kernel\Database");
 
             // Generate attributes
-            foreach (\Kernel\Database::getColumns($table) as $column) {
+            foreach (Database::getColumns($table) as $column) {
                 $field = $column["Field"];
 
-                $columnType = strtolower($column["Type"]);
+                $type = strtolower($column["Type"]);
 
-                $type = self::getType($columnType);
+                $type = self::getType($type);
+
+                self::checkForeignKey($field, $type);
 
                 $class->addProperty($field)
                     ->setVisibility("private")
@@ -36,26 +39,36 @@ class GeneratorModels
             }
 
             // Generate setters and getters
-            foreach (\Kernel\Database::getColumns($table) as $column) {
+            foreach (Database::getColumns($table) as $column) {
                 $field = $column['Field'];
 
                 $fieldRenamed = implode(array_map('ucfirst', explode('_', $field)));
 
-                $columnType = strtolower($column["Type"]);
+                if (strpos($field, "_id")) {
+                    $fieldRenamed = substr($fieldRenamed, 0, -2);
+                }
 
-                $type = self::getType($columnType);
+                $type = strtolower($column["Type"]);
 
-                $class->addMethod("get" . $fieldRenamed)
+                $type = self::getType($type);
+
+                self::checkForeignKey($field, $type);
+
+                $class->addMethod("get$fieldRenamed")
                     ->setVisibility("public")
                     ->setBody("return \$this->$field;")
                     ->addComment("@return $type");
 
                 $param = new Parameter($field);
-                $class->addMethod("set" . $fieldRenamed)
+                if (strtolower($type) == $field) {
+                    $param->setTypeHint("\\Models\\$type");
+                }
+
+                $class->addMethod("set$fieldRenamed")
                     ->setVisibility("public")
-                    ->setParameters([$param])
                     ->setBody("\$this->$field = $field;")
-                    ->addComment("@params $type $field");
+                    ->setParameters([$param])
+                    ->addComment("@param $type $field");
             }
 
             $content = "<?php\n\n" . $class;
@@ -85,19 +98,19 @@ class GeneratorModels
         // Get type of the field
         switch (true) {
 
-            case preg_match('#int#', $columnType):
+            case strpos($columnType, "int"):
                 $type = "int";
                 break;
 
-            case preg_match('#double#', $columnType):
+            case strpos($columnType, "double"):
                 $type = "double";
                 break;
 
-            case preg_match('#float#', $columnType):
+            case strpos($columnType, "float"):
                 $type = "float";
                 break;
 
-            case preg_match('#bool#', $columnType):
+            case strpos($columnType, "bool"):
                 $type = "boolean";
                 break;
 
@@ -107,5 +120,14 @@ class GeneratorModels
         }
 
         return $type;
+    }
+
+    public static function checkForeignKey(&$field, &$type)
+    {
+        if (strpos($field, '_id')) {
+            $field = substr($field, 0, strlen($field) - 3);
+
+            $type = implode(array_map('ucfirst', explode('_', $field)));
+        }
     }
 }

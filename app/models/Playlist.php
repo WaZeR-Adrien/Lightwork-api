@@ -1,6 +1,6 @@
 <?php
 
-class Comment extends \Kernel\Database
+class Playlist extends \Kernel\Database
 {
 	/** @var string */
 	private $id;
@@ -10,9 +10,6 @@ class Comment extends \Kernel\Database
 
 	/** @var string */
 	private $id_movie;
-
-	/** @var string */
-	private $content;
 
 
 	/**
@@ -66,24 +63,6 @@ class Comment extends \Kernel\Database
 	public function setIdMovie($id_movie)
 	{
 		$this->id_movie = id_movie;
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function getContent()
-	{
-		return $this->content;
-	}
-
-
-	/**
-	 * @param string content
-	 */
-	public function setContent($content)
-	{
-		$this->content = content;
 	}
 
 }
