@@ -4,6 +4,7 @@ namespace Kernel\Router;
 class Group
 {
     private $path;
+    private $token;
     private $args;
     private $router;
 
@@ -15,9 +16,10 @@ class Group
      * @param $args
      * @param Router $router
      */
-    public function __construct($path, $args, Router $router)
+    public function __construct($path, $token, $args, Router $router)
     {
         $this->path = trim($path, '/');
+        $this->token = $token;
         $this->args = null != $args ? $args : [];
         $this->router = $router;
     }
@@ -27,31 +29,37 @@ class Group
      * @param $method
      * @param $path
      * @param $callable
+     * @param $token
      * @param array $args
      * @param array $bodies
      */
-    public function add($method, $path, $callable, $args = [], $bodies = [])
+    public function add($method, $path, $callable, $token = null, $args = [], $bodies = [])
     {
         trim($this->path, '/');
+        
+        $token = null !== $token ? $token : $this->token;
 
         $this->_loopIncrement($args);
 
-        $this->router->add($method, ($this->path . $path), $callable, $args, $bodies);
+        $this->router->add($method, ($this->path . $path), $callable, $token, $args, $bodies);
     }
 
     /**
      * Create a subgroup of the group of routes
      * @param $path
      * @param $callable
+     * @param $token
      * @param array $args
      */
-    public function group($path, $callable, $args = [])
+    public function group($path, $callable, $token, $args = [])
     {
         trim($this->path, '/');
+        
+        $token = null !== $token ? $token : $this->token;
 
         $this->_loopIncrement($args);
 
-        $group = new self(($this->path . $path), $args, $this->router);
+        $group = new self(($this->path . $path), $token, $args, $this->router);
 
         $callable($group);
     }

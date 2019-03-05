@@ -30,12 +30,13 @@ class Router
     /**
      * Create a group of routes
      * @param string $endpoint
-     * @param string $callable
+     * @param callable $callable
+     * @param boolean $token
      * @param array $args
      */
-    public function group($endpoint, $callable, $args = [])
+    public function group($endpoint, $callable, $token = null, $args = [])
     {
-        $group = new Group($endpoint, $args, $this);
+        $group = new Group($endpoint, $args, $token, $this);
 
         $callable($group);
     }
@@ -43,14 +44,15 @@ class Router
     /**
      * @param string $method : GET / POST / PUT / DELETE...
      * @param string $endpoint
-     * @param string $callable
+     * @param callable $callable
+     * @param boolean $token
      * @param array $args
      * @param array $bodies
      * @return Route
      */
-    public function add($method, $endpoint, $callable, $args = [], $bodies = [])
+    public function add($method, $endpoint, $callable, $token = null, $args = [], $bodies = [])
     {
-        $route = new Route($method, $endpoint, $callable, $args, $bodies);
+        $route = new Route($method, $endpoint, $callable, $token, $args, $bodies);
 
         $this->_routes[$method][] = $route;
 

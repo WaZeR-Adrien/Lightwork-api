@@ -33,6 +33,12 @@ class Route
     private $callable;
 
     /**
+     * If need token
+     * @var boolean
+     */
+    private $token;
+
+    /**
      * Matches params
      * @var array
      */
@@ -63,12 +69,6 @@ class Route
     private $name;
 
     /**
-     * If need token
-     * @var boolean
-     */
-    private $token;
-
-    /**
      * Codes for the response
      * @var array
      */
@@ -86,13 +86,16 @@ class Route
      * @param $method
      * @param $path
      * @param $callable
+     * @param $token
      * @param $args
+     * @param $bodies
      */
-    public function __construct($method, $path, $callable, $args, $bodies)
+    public function __construct($method, $path, $callable, $token, $args, $bodies)
     {
         $this->method = $method;
         $this->path = trim($path, '/');
         $this->callable = $callable;
+        $this->token = $token;
         $this->typeArgs = $args;
         $this->bodies = $bodies;
 
@@ -112,13 +115,11 @@ class Route
             if (property_exists($this, $k) && empty($this->$k)) {
 
                 $this->$k = $v;
-
-                if ($k == "codes") {
-                    if (isset($annotations["token"]) && !array_key_exists("E_A002", $v)) {
-                        $this->codes["E_A002"] = Utils::getConfigElement("apiCode")["E_A002"];
-                    }
-                }
             }
+        }
+
+        if ($this->token && !array_key_exists("E_A002", $this->codes)) {
+            $this->codes["E_A002"] = Utils::getConfigElement("apiCode")["E_A002"];
         }
 
         if (!empty($this->bodies)) {
