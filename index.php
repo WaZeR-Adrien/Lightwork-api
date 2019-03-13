@@ -30,28 +30,25 @@ $router->group('/examples', function (Group $group) {
     $group->add('GET', '', "Example#getAll");
 
     // GET Method with params
-    $group->add('GET', '/:slug-:id', "Example#index", [], [
-        'slug' => 'String'
-    ]);
+    $group->add('GET', '/:slug-:id', "Example#index")
+        ->arg("slug", "String")->token(false);
 
     // PUT (UPDATE) Method with param
     $group->add('PUT', '/:id', "Example#update");
 
     // POST (INSERT) Method
-    $group->add('POST', '', "Example#add", [], [
-        '*email' => '',
-        '*password' => 'String',
-        'name' => 'String',
-        'age' => 'Int',
-    ]);
+    $group->add('POST', '', "Example#add")
+        ->body('email', '', true)
+        ->body('password', 'String', true)
+        ->body('name', 'String')
+        ->body('age', 'Int')
+        ->token();
 
     // DELETE Method
     $group->add('DELETE', '/:id', "Example#delete");
 
 
-}, [ // Arguments of routes in this group
-    'id' => 'Int',
-]);
+})->arg("id", "Int")->token();
 
 
 $router->run();

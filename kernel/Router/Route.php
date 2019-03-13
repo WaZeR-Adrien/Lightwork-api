@@ -9,7 +9,6 @@ use Kernel\Tools\Collection\Collection;
 use Kernel\Tools\Utils;
 use Models\Auth;
 use Models\User;
-use function PHPSTORM_META\type;
 
 class Route
 {
@@ -36,7 +35,7 @@ class Route
      * If need token
      * @var boolean
      */
-    private $token;
+    private $token = null;
 
     /**
      * Matches params
@@ -51,100 +50,22 @@ class Route
     private $args = [];
 
     /**
-     * Type of arguments
-     * @var array
-     */
-    private $typeArgs = [];
-
-    /**
      * Bodies
      * @var array
      */
     private $bodies = [];
 
     /**
-     * Name / Description for the documentation
-     * @var string
-     */
-    private $name;
-
-    /**
-     * Codes for the response
-     * @var array
-     */
-    private $codes = [];
-
-    /**
-     * Type of the render (json | xml...)
-     * @var string
-     */
-    private $render;
-
-
-    /**
      * Route constructor
      * @param $method
      * @param $path
      * @param $callable
-     * @param $token
-     * @param $args
-     * @param $bodies
      */
-    public function __construct($method, $path, $callable, $token, $args, $bodies)
+    public function __construct($method, $path, $callable)
     {
         $this->method = $method;
         $this->path = trim($path, '/');
         $this->callable = $callable;
-        $this->token = $token;
-        $this->typeArgs = $args;
-        $this->bodies = $bodies;
-
-        $this->editArgs($args);
-
-        $this->setProperties();
-    }
-
-    private function setProperties()
-    {
-        $params = explode('#', $this->callable);
-        $controller = "\Controllers\\$params[0]";
-
-        $annotations = Docs::getPhpDoc($controller, $params[1]);
-
-        foreach ($annotations as $k => $v) {
-            if (property_exists($this, $k) && empty($this->$k)) {
-
-                $this->$k = $v;
-            }
-        }
-
-        if ($this->token && !array_key_exists("E_A002", $this->codes)) {
-            $this->codes["E_A002"] = Utils::getConfigElement("apiCode")["E_A002"];
-        }
-
-        if (!empty($this->bodies)) {
-            foreach ($this->bodies as $key => $type) {
-                if ($key[0] === '*' && !array_key_exists("E_A004", $this->codes)) {
-                    $this->codes["E_A004"] = Utils::getConfigElement("apiCode")["E_A004"];
-                }
-            }
-        }
-    }
-
-    /**
-     * Edit args with regex
-     * @param $args
-     */
-    private function editArgs($args)
-    {
-        if (!empty($args)) {
-            foreach ($args as $key => $value) {
-
-                $value = Config::setRegex(ucfirst($value));
-
-                $this->args[$key] = str_replace('(', '(?:', $value);
-            }
-        }
     }
 
     /**
@@ -155,8 +76,8 @@ class Route
     public function match($currentUrl)
     {
         $currentUrl = trim($currentUrl, '/');
-        $endpoint = preg_replace_callback('#:([\w]+)#', [$this, 'argMatch'], $this->path);
-        $reg = "#^$endpoint$#i";
+        $path = preg_replace_callback('#:([\w]+)#', [$this, 'argMatch'], $this->path);
+        $reg = "#^$path$#i";
 
         // Get values
         if (!preg_match($reg, $currentUrl, $matchesValues)) {
@@ -184,11 +105,12 @@ class Route
      */
     private function argMatch($match)
     {
-        if (isset($this->args[$match[1]])) {
-            $reg = '(' . $this->args[$match[1]] . ')';
-            return $reg;
-        }
         $reg = '([^/]+)';
+
+        if (isset($this->args[$match[1]])) {
+            $reg = '(' . $this->args[$match[1]]["regex"] . ')';
+        }
+
         return $reg;
     }
 
@@ -218,6 +140,7 @@ class Route
             return $response->fromApi($bodies["error"], $bodies["key"])->toJson();
         }
 
+        // Get the token
         $token = Utils::getHeader("X-Auth-Token");
         if (!empty($token)) {
             $request->getHeaders()->add($token, "X-Auth-Token");
@@ -227,12 +150,11 @@ class Route
         $data = [$request, $response, $router->getAllRoutes()];
 
         if (is_string($this->callable)) {
-            $params = explode('#', $this->callable);
-            $controller = "Controllers\\$params[0]";
+            $callable = explode('#', $this->callable);
+            $controller = "Controllers\\$callable[0]";
 
-            return call_user_func_array([new $controller(), $params[1]], $data);
-        }
-        else {
+            return call_user_func_array([new $controller(), $callable[1]], $data);
+        } else {
             return call_user_func_array($this->callable, $data);
         }
     }
@@ -242,7 +164,7 @@ class Route
      * @param Request $request
      * @return Request
      */
-    private function setRequestData(Request $request)
+    private function setRequestData(Request &$request)
     {
         if (in_array($request->getMethod(), ['PUT', 'PATCH'])) {
             $request->setBody( new Collection((array) Utils::parse_http_put()) );
@@ -255,24 +177,20 @@ class Route
         if (!empty($_FILES)) {
             $request->setFiles( new Collection($_FILES) );
         }
-
-
-
-        return $request;
     }
 
     /**
-     * @param $params
+     * @param array $args
      * @return mixed|string
      */
-    public function getUrl($params)
+    public function getUrl($args)
     {
-        $endpoint = $this->path;
-        foreach ($params as $k => $v) {
-            $endpoint = str_replace(":$k", $v, $endpoint);
+        $path = $this->path;
+        foreach ($args as $k => $v) {
+            $path = str_replace(":$k", $v, $path);
         }
 
-        return $endpoint;
+        return $path;
     }
 
     /**
@@ -308,6 +226,8 @@ class Route
 
             if ($errorToken) return ["error" => "E_A002"];
         }
+
+        return true;
     }
 
     /**
@@ -324,20 +244,64 @@ class Route
             $data = (object) $_POST;
         }
 
-        $requireKeys = [];
-        $requireTypes = [];
+        $require = [
+            "key" => [],
+            "type" => []
+        ];
 
-        foreach ($this->bodies as $key => $type) {
-            $nameOfKey = ($key[0] === '*') ? substr($key, 1, strlen($key)) : $key;
-
-            if ($key[0] === '*' || property_exists($data, $nameOfKey)) {
-                $requireKeys[] = $nameOfKey;
-                $requireTypes[$nameOfKey] = ucfirst($type);
+        foreach ($this->bodies as $body) {
+            if ($body["required"] || property_exists($data, $body["name"])) {
+                $require["key"][] = $body["name"];
+                $require["type"][$body["name"]] = ucfirst($body["type"]);
             }
         }
         if (isset($data)) {
-            return Utils::checkPropsInObject($data, $requireKeys, $requireTypes);
+            return Utils::checkPropsInObject($data, $require["key"], $require["type"]);
         }
+    }
+
+    /**
+     * @param string $name
+     * @param string $type
+     * @return Route
+     */
+    public function arg($name, $type)
+    {
+        $value = Config::setRegex(ucfirst($type));
+
+        $this->args[$name] = [
+            "type" => $type,
+            "regex" => str_replace('(', '(?:', $value)
+        ];
+
+        return $this;
+    }
+
+    /**
+     * @param string $name
+     * @param string $type
+     * @param bool $required
+     * @return Route
+     */
+    public function body($name, $type, $required = false)
+    {
+        $this->bodies[$name] = [
+            "type" => $type,
+            "required" => $required
+        ];
+
+        return $this;
+    }
+
+    /**
+     * @param bool $required
+     * @return Route
+     */
+    public function token($required = true)
+    {
+        $this->token = $required;
+
+        return $this;
     }
 
     /**
@@ -391,72 +355,16 @@ class Route
     /**
      * @return mixed
      */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return mixed
-     */
     public function getToken()
     {
         return $this->token;
     }
-
+    
     /**
      * @return array
      */
-    public function getNeedRole()
+    public function getProperties()
     {
-        return $this->_needRole;
-    }
-
-    /**
-     * @return array
-     */
-    public function getCodes()
-    {
-        return $this->codes;
-    }
-
-    /**
-     * @param array $codes
-     */
-    public function setCodes($codes)
-    {
-        $this->codes = $codes;
-    }
-
-    /**
-     * @return string
-     */
-    public function getRender()
-    {
-        return $this->render;
-    }
-
-    /**
-     * @param string $render
-     */
-    public function setRender($render)
-    {
-        $this->render = $render;
-    }
-
-    /**
-     * @return array
-     */
-    public function getTypeArgs()
-    {
-        return $this->typeArgs;
-    }
-
-    /**
-     * @param array $typeArgs
-     */
-    public function setTypeArgs($typeArgs)
-    {
-        $this->typeArgs = $typeArgs;
+        return get_object_vars($this);
     }
 }

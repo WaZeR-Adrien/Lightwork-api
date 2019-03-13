@@ -1,26 +1,25 @@
 <?php
 namespace Kernel\Router;
+use Kernel\Config;
 
 class Group
 {
     private $path;
-    private $token;
-    private $args;
     private $router;
+    private $args = [];
+    private $token = null;
+    private $routes = [];
+    private $groups = [];
 
 
     /**
      * Group constructor
      * @param $path
-     * @param $token
-     * @param $args
      * @param Router $router
      */
-    public function __construct($path, $token, $args, Router $router)
+    public function __construct($path, Router $router)
     {
         $this->path = trim($path, '/');
-        $this->token = $token;
-        $this->args = null != $args ? $args : [];
         $this->router = $router;
     }
 
@@ -29,52 +28,87 @@ class Group
      * @param $method
      * @param $path
      * @param $callable
-     * @param $token
-     * @param array $args
-     * @param array $bodies
+     * @return Route
      */
-    public function add($method, $path, $callable, $token = null, $args = [], $bodies = [])
+    public function add($method, $path, $callable)
     {
         trim($this->path, '/');
+
+        $route = $this->router->add($method, ($this->path . $path), $callable);
         
-        $token = null !== $token ? $token : $this->token;
+        $this->routes[] = $route;
 
-        $this->_loopIncrement($args);
-
-        $this->router->add($method, ($this->path . $path), $callable, $token, $args, $bodies);
+        return $route;
     }
 
     /**
      * Create a subgroup of the group of routes
      * @param $path
      * @param $callable
-     * @param $token
-     * @param array $args
+     * @return Group
      */
-    public function group($path, $callable, $token, $args = [])
+    public function group($path, $callable)
     {
         trim($this->path, '/');
+
+        $group = new self(($this->path . $path), $this->router);
         
-        $token = null !== $token ? $token : $this->token;
-
-        $this->_loopIncrement($args);
-
-        $group = new self(($this->path . $path), $token, $args, $this->router);
+        $this->groupes[] = $group;
 
         $callable($group);
+
+        return $group;
     }
 
     /**
-     * Increment the $this->_params array with the new values
-     * Overwrite old values if they have the same key
-     * @param array $args
+     * @param string $name
+     * @param string $type
+     * @return Group
      */
-    private function _loopIncrement(&$args = [])
+    public function arg($name, $type)
     {
-        $newArgs = $this->args;
-        foreach ($args as $k => $v) {
-            $newArgs[$k] = $v;
+        $value = Config::setRegex(ucfirst($type));
+
+        $this->args[$name] = [
+            "type" => $type,
+            "regex" => str_replace('(', '(?:', $value)
+        ];
+        
+        foreach($this->routes as $route) {
+            if (!isset($route->getArgs()[$name])) {
+                $route->arg($name, $type);
+            }
         }
-        $args = $newArgs;
+        
+        foreach($this->groups as $group) {
+            if (!isset($group->args[$name])) {
+                $group->arg($name, $type);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param bool $required
+     * @return Group
+     */
+    public function token($required = true)
+    {
+        $this->token = $required;
+        
+        foreach($this->routes as $route) {
+            if ($route->getToken() === null) {
+                $route->token($this->token);
+            }
+        }
+        
+        foreach($this->groups as $group) {
+            if ($group->token === null) {
+                $group->token($this->token);
+            }
+        }
+
+        return $this;
     }
 }

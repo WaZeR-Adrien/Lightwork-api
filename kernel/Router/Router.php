@@ -10,13 +10,13 @@ class Router
      * Current url of the request page
      * @var string
      */
-    private $_currentUrl;
+    private $currentUrl;
 
     /**
      * All routes
      * @var array
      */
-    private $_routes = [];
+    private $routes = [];
 
     /**
      * Router constructor.
@@ -24,37 +24,35 @@ class Router
      */
     public function __construct($currentUrl)
     {
-        $this->_currentUrl = $currentUrl;
+        $this->currentUrl = $currentUrl;
     }
 
     /**
      * Create a group of routes
-     * @param string $endpoint
+     * @param string $path
      * @param callable $callable
-     * @param boolean $token
-     * @param array $args
+     * @return Group
      */
-    public function group($endpoint, $callable, $token = null, $args = [])
+    public function group($path, $callable)
     {
-        $group = new Group($endpoint, $args, $token, $this);
+        $group = new Group($path, $this);
 
         $callable($group);
+
+        return $group;
     }
 
     /**
      * @param string $method : GET / POST / PUT / DELETE...
-     * @param string $endpoint
+     * @param string $path
      * @param callable $callable
-     * @param boolean $token
-     * @param array $args
-     * @param array $bodies
      * @return Route
      */
-    public function add($method, $endpoint, $callable, $token = null, $args = [], $bodies = [])
+    public function add($method, $path, $callable)
     {
-        $route = new Route($method, $endpoint, $callable, $token, $args, $bodies);
+        $route = new Route($method, $path, $callable);
 
-        $this->_routes[$method][] = $route;
+        $this->routes[$method][] = $route;
 
         return $route;
     }
@@ -66,15 +64,15 @@ class Router
      */
     public function run()
     {
-        if (!isset($this->_routes[$_SERVER['REQUEST_METHOD']])) {
+        if (!isset($this->routes[$_SERVER['REQUEST_METHOD']])) {
             throw new RouterException('REQUEST_METHOD doesn\'t exist');
             die();
         }
 
         try {
-            foreach ($this->_routes[$_SERVER['REQUEST_METHOD']] as $route) {
+            foreach ($this->routes[$_SERVER['REQUEST_METHOD']] as $route) {
 
-                if ($route->match($this->_currentUrl)) {
+                if ($route->match($this->currentUrl)) {
                     $res = $route->call($this);
 
                     if ("object" == gettype($res) && "Kernel\Http\Response" == get_class($res)) {
@@ -127,7 +125,7 @@ class Router
     {
         $allRoutes = [];
 
-        foreach ($this->_routes as $method => $routes) {
+        foreach ($this->routes as $method => $routes) {
             foreach ($routes as $route) { $allRoutes[] = $route; }
         }
 
