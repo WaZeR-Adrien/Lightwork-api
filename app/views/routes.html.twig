@@ -15,15 +15,15 @@
             {% for route in routes %}
                 <div class="col s12">
                     <div class="col s6 about">
-                        <div class="col s12 white-text semibold-text method-and-endpoint {{ route.getMethod()|lower }}">
-                            <span class="z-depth-2 method {{ route.getMethod()|lower }}">{{ route.getMethod() }}</span> /{{ route.getPath() }}
+                        <div class="col s12 white-text semibold-text method-and-endpoint {{ route.method|lower }}">
+                            <span class="z-depth-2 method {{ route.method|lower }}">{{ route.method }}</span> /{{ route.path }}
 
-                            {% if route.getToken() %}
+                            {% if route.token %}
                                 <i class="material-icons right tooltipped" data-position="right" data-tooltip="Secure route by Token">lock</i>
                             {% endif %}
                         </div>
 
-                        {% if route.getCodes()|length > 0 %}
+                        {% if route.codes|length > 0 %}
                             <div class="col s12 errors">
                                 <h6>Codes of response :</h6>
 
@@ -37,7 +37,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for code, content in route.getCodes() %}
+                                    {% for code, content in route.codes %}
                                         <tr class="{{ code|first == 'S' ? 'green' : 'red' }} lighten-4">
                                             <td class="col s2">{{ code }}</td>
                                             <td class="col s2">{{ content.status }}</td>
@@ -52,7 +52,7 @@
 
                     <div class="col s6 examples grey-text text-lighten-3 grey darken-4">
                         <h5 class="col s12 truncate">
-                            {{ route.getName() }}
+                            {{ route.name }}
                         </h5>
 
                         <div class="col s12 request">
@@ -72,7 +72,7 @@
                                     <td>Content-Type</td>
                                     <td>application/x-www-form-urlencoded</td>
                                 </tr>
-                                {% if route.getToken() %}
+                                {% if route.token %}
                                 <tr>
                                     <td>X-Auth-Token</td>
                                     <td>YOUR_TOKEN_HERE</td>
@@ -81,8 +81,8 @@
                                 </tbody>
                             </table>
 
-                            <p class="purple-text text-lighten-1"><i>{{ route.getTypeArgs()|length > 0 ? 'Arguments' : 'No arguments' }}</i></p>
-                            {% if route.getTypeArgs()|length > 0 %}
+                            <p class="purple-text text-lighten-1"><i>{{ route.args|length > 0 ? 'Arguments' : 'No arguments' }}</i></p>
+                            {% if route.args|length > 0 %}
                                 <table class="highlight">
 
                                     <thead>
@@ -92,18 +92,18 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for keyArg, type in route.getTypeArgs() %}
+                                    {% for keyArg, content in route.args %}
                                         <tr>
                                             <td>{{ keyArg }}</td>
-                                            <td>{{ type }}</td>
+                                            <td>{{ content.type }}</td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
                                 </table>
                             {% endif %}
 
-                            <p class="purple-text text-lighten-1"><i>{{ route.getBodies()|length > 0 ? 'Bodies' : 'No bodies' }}</i></p>
-                            {% if route.getBodies()|length > 0 %}
+                            <p class="purple-text text-lighten-1"><i>{{ route.bodies|length > 0 ? 'Bodies' : 'No bodies' }}</i></p>
+                            {% if route.bodies|length > 0 %}
                                 <table class="highlight">
 
                                     <thead>
@@ -114,18 +114,11 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for keyBody, type in route.getBodies() %}
-                                        {% if keyBody[:1] == '*' %}
-                                            {% set keyBody = keyBody|slice(1, keyBody|length) %}
-                                            {% set require = true %}
-                                        {% else %}
-                                            {% set keyBody = keyBody %}
-                                            {% set require = false %}
-                                        {% endif %}
+                                    {% for keyBody, content in route.bodies %}
                                         <tr>
                                             <td>{{ keyBody }}</td>
-                                            <td>{{ type == '' ? 'All' : type|capitalize }}</td>
-                                            <td>{{ require ? 'Require' : 'Optional' }}</td>
+                                            <td>{{ content.type == '' ? 'All' : content.type|capitalize }}</td>
+                                            <td>{{ content.required ? 'Require' : 'Optional' }}</td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>

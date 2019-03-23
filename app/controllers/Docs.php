@@ -69,11 +69,54 @@ class Docs extends Controller
 
                 $ref = explode('/', $route->getPath())[0];
 
+                $route = self::getProperties($route);
+
                 $refs[$ref][] = $route;
             }
         }
 
         return $refs;
+    }
+
+    /**
+     * Get the php doc properties of the route
+     * @param $route
+     */
+    private static function getProperties($initialRoute)
+    {
+        $params = explode('#', $initialRoute->getCallable());
+        $controller = "\Controllers\\$params[0]";
+
+        $annotations = Docs::getPhpDoc($controller, $params[1]);
+
+        // Create route with empty codes
+        $route = [
+            "codes" => []
+        ];
+
+        foreach ($annotations as $k => $v) { $route[$k] = $v; }
+        
+        foreach ($initialRoute->getProperties() as $k => $v) {
+            $propRenammed = implode(array_map('ucfirst', explode('_', $k)));
+            $getter = "get$propRenammed";
+            
+            $route[$k] = $initialRoute->$getter();
+        }
+
+        if ($initialRoute->getToken() && !array_key_exists("E_A002", $route["codes"])) {
+            $route["codes"]["E_A002"] = Utils::getConfigElement("apiCode")["E_A002"];
+        }
+
+        if (!empty($initialRoute->getBodies())) {
+            foreach ($initialRoute->getBodies() as $body) {
+                if ($body["required"] && !array_key_exists("E_A004", $route["codes"])) {
+                    $route["codes"]["E_A004"] = Utils::getConfigElement("apiCode")["E_A004"];
+                    break;
+                }
+            }
+        }
+        
+        return $route;
     }
 
     /**

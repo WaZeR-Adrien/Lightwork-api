@@ -2,7 +2,7 @@ project: Lightwork-API
 version: 5.0.0
 
 database:
-  host: YOUR_HOST_HERE
+  host: YOUR_HOST
   dbname: YOUR_DATABASE_NAME
   user: YOUR_USER_ACCOUNT
   password: YOUR_PASSWORD
@@ -144,7 +144,6 @@ token:
 
 docTags:
   name: DescriptionTag
-  bodies: MapTag
   token: FlagTag
   codes: ArrayTag
   render: DescriptionTag
