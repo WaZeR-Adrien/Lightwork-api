@@ -15,13 +15,15 @@ class GeneratorModels
             'Tables_in_' . Utils::getConfigElement('database')['dbname']
             ];
 
-            $tableRenamed = implode(array_map('ucfirst', explode('_', $table)));
+            $tableRenamed = Utils::toPascalCase($table);
 
             $namespace = new PhpNamespace("Models");
 
+            $namespace->addUse("\Kernel\Orm\Database");
+
             $class = $namespace->addClass($tableRenamed);
 
-            $class->addExtend("\Kernel\Database");
+            $class->addExtend("\Kernel\Orm\Database");
 
             // Generate attributes
             foreach (Database::getColumns($table) as $column) {
@@ -42,7 +44,7 @@ class GeneratorModels
             foreach (Database::getColumns($table) as $column) {
                 $field = $column['Field'];
 
-                $fieldRenamed = implode(array_map('ucfirst', explode('_', $field)));
+                $fieldRenamed = Utils::toPascalCase($field);
 
                 if (strpos($field, "_id")) {
                     $fieldRenamed = substr($fieldRenamed, 0, -2);
@@ -66,12 +68,12 @@ class GeneratorModels
 
                 $class->addMethod("set$fieldRenamed")
                     ->setVisibility("public")
-                    ->setBody("\$this->$field = $field;")
+                    ->setBody("\$this->$field = \$$field;")
                     ->setParameters([$param])
                     ->addComment("@param $type $field");
             }
 
-            $content = "<?php\n\n" . $class;
+            $content = "<?php\n\n" . $namespace;
 
             // Get directory
             $dir = dirname(__FILE__);
@@ -98,19 +100,19 @@ class GeneratorModels
         // Get type of the field
         switch (true) {
 
-            case strpos($columnType, "int"):
+            case preg_match("#int#", $columnType):
                 $type = "int";
                 break;
 
-            case strpos($columnType, "double"):
+            case preg_match("#double#", $columnType):
                 $type = "double";
                 break;
 
-            case strpos($columnType, "float"):
+            case preg_match("#float#", $columnType):
                 $type = "float";
                 break;
 
-            case strpos($columnType, "bool"):
+            case preg_match("#bool#", $columnType):
                 $type = "boolean";
                 break;
 
@@ -127,7 +129,7 @@ class GeneratorModels
         if (strpos($field, '_id')) {
             $field = substr($field, 0, strlen($field) - 3);
 
-            $type = implode(array_map('ucfirst', explode('_', $field)));
+            $type = Utils::toPascalCase($field);
         }
     }
 }
