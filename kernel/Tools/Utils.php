@@ -239,13 +239,23 @@ class Utils
     }
 
     /**
+     * Convert element to pascal case
+     * @param $element
+     * @return string
+     */
+    public static function toPascalCase($element)
+    {
+        return implode(array_map('ucfirst', explode('_', $element)));
+    }
+
+    /**
      * Allow to get element(s) of the config.yml
      * @param null $element
      * @return mixed
      */
     public static function getConfigElement($element = null)
     {
-        $path = "kernel/config.yml";
+        $path = dirname(__DIR__) . "/config.yml";
 
         return (null != $element) ?
             Yaml::parseFile($path)[$element] : Yaml::parseFile($path);
