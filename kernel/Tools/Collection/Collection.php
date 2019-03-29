@@ -1,6 +1,9 @@
 <?php
 namespace Kernel\Tools\Collection;
 
+use function Jasny\object_get_properties;
+use Kernel\Tools\Utils;
+
 class Collection
 {
     /**
@@ -128,9 +131,9 @@ class Collection
      */
     public function push(Collection $collection)
     {
-        foreach ($collection->getAll() as $key => $value) {
-            if (!$this->keyExists($key)) {
-                $this->items[$key] = $value;
+        foreach ($collection->getAll() as $k => $v) {
+            if (!$this->keyExists($k)) {
+                $this->items[$k] = $v;
             }
         }
 
@@ -272,6 +275,42 @@ class Collection
     public function reverse()
     {
         return new self(array_reverse($this->items, true));
+    }
+
+    /**
+     * Convert all objects to arrays with the getters
+     * @return array
+     */
+    public function toArrays()
+    {
+        foreach ($this->items as $k => &$v) {
+            // If the value is an object :
+            // Get all values of the object with the getters and save in an array
+            if (is_object($v)) {
+
+                $array = [];
+                $reflect = new \ReflectionObject($v);
+                foreach ($reflect->getProperties() as $property) {
+                    $propertyName = $property->getName();
+
+                    $getter = "get" . Utils::toPascalCase($propertyName);
+                    $array[$propertyName] = $v->$getter();
+                }
+                $v = $array;
+                if ($k === 'user') {
+                    //var_dump($v);
+                }
+            }
+
+            // If the value is an array :
+            // Load this function to convert the sub objects in arrays...
+            if (is_array($v)) {
+                $collection = new Collection($v);
+                $v = $collection->toArrays();
+            }
+        }
+
+        return $this->items;
     }
 
     /**
