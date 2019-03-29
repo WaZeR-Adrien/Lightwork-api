@@ -25,6 +25,9 @@ class GeneratorModels
 
             $class->addExtend("\Kernel\Orm\Database");
 
+            // Body constructor
+            $bodyConstructor = "if (null != \$id) { \$this->id = \$id; }\n";
+
             // Generate attributes
             foreach (Database::getColumns($table) as $column) {
                 $field = $column["Field"];
@@ -33,12 +36,24 @@ class GeneratorModels
 
                 $type = self::getType($type);
 
-                self::checkForeignKey($field, $type);
+                $fk = false;
+
+                self::checkForeignKey($field, $type, $fk);
 
                 $class->addProperty($field)
                     ->setVisibility("private")
                     ->addComment("@var $type");
+
+                if ($fk) {
+                    $bodyConstructor .= "\$this->$field = new $type();\n";
+                }
             }
+
+            // Generate constructor
+            $class->addMethod("__construct")
+                ->addComment("@param int id")
+                ->setBody($bodyConstructor)
+                ->addParameter("id", null);
 
             // Generate setters and getters
             foreach (Database::getColumns($table) as $column) {
@@ -124,12 +139,14 @@ class GeneratorModels
         return $type;
     }
 
-    public static function checkForeignKey(&$field, &$type)
+    public static function checkForeignKey(&$field, &$type, &$fk = null)
     {
         if (strpos($field, '_id')) {
             $field = substr($field, 0, strlen($field) - 3);
 
             $type = Utils::toPascalCase($field);
+
+            $fk = true;
         }
     }
 }
