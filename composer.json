@@ -16,8 +16,11 @@
         }
     },
     "scripts": {
+        "generate": [
+            "Kernel\\Orm\\Generator::run"
+        ],
         "generate-models": [
-            "Kernel\\Orm\\GeneratorModels::run"
+            "Kernel\\Orm\\Generator::generateEntities"
         ]
     }
 }
