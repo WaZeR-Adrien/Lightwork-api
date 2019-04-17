@@ -1,16 +1,16 @@
-project: Lightwork-API
-version: 5.0.0
+project: PROJECT_NAME
+version: PROJECT_VERSION
 
 database:
-  host: YOUR_HOST
-  dbname: YOUR_DATABASE_NAME
-  user: YOUR_USER_ACCOUNT
-  password: YOUR_PASSWORD
+  host: DATABASE_HOST:DATABASE_PORT
+  dbname: DATABASE_NAME
+  user: DATABASE_USERNAME
+  password: DATABASE_PASSWORD
 
 mail:
-  host: YOUR_SMTP_HOST
-  user: YOUR_SMTP_USER/EMAIL
-  password: YOUR_SMTP_PASSWORD
+  host: MAIL_HOST
+  user: MAIL_USERNAME
+  password: MAIL_PASSWORD
 
 regex:
   string: '\w+'
@@ -22,131 +22,15 @@ regex:
   usDate: '\d{4}\-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])'
   datetime: '\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01]) (00|[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])(:([0-9]|[0-5][0-9]))?'
 
-status:
-  # Informational response
-  http_continue: &http_continue 100
-  http_switching_protocols: &http_switching_protocols 101
-  ttp_processing: &ttp_processing 102
-  http_early_hints: &http_early_hints 103
-
-  # Success
-  http_ok: &http_ok 200
-  http_created: &http_created 201
-  http_accepted: &http_accepted 202
-  http_non_authoritative_information: &http_non_authoritative_information 203
-  http_no_content: &http_no_content 204
-  http_reset_content: &http_reset_content 205
-  http_partial_content: &http_partial_content 2 &06
-  http_multi_status: &http_multi_status 2 &07
-  http_already_reported: &http_already_reported 2 &08
-  http_content_different: &http_content_different 2 &10
-  http_im_used: &http_im_used 2 &26
-
-  # Redirection
-  http_multiple_choices: &http_multiple_choices 300
-  http_moved_permanently: &http_moved_permanently 301
-  http_found: &http_found 302
-  http_see_other: &http_see_other 303
-  http_not_modified: &http_not_modified 304
-  http_use_proxy: &http_use_proxy 305
-  http_unused: &http_unused 306
-  http_temporary_redirect: &http_temporary_redirect 307
-  http_permanent_redirect: &http_permanent_redirect 308
-
-  # Client errors
-  http_bad_request:  &http_bad_request400
-  http_unauthorized: &http_unauthorized 401
-  http_payment_required: &http_payment_required 402
-  http_forbidden: &http_forbidden 403
-  http_not_found: &http_not_found 404
-  http_method_not_allowed: &http_method_not_allowed 405
-  http_not_acceptable: &http_not_acceptable 406
-  http_proxy_authentication_required: &http_proxy_authentication_required 407
-  http_request_timeout: &http_request_timeout 408
-  http_conflict: &http_conflict 409
-  http_gone: &http_gone 410
-  http_length_required: &http_length_required 411
-  http_precondition_failed: &http_precondition_failed 412
-  http_request_entity_too_large: &http_request_entity_too_large 413
-  http_request_uri_too_long: &http_request_uri_too_long 414
-  http_unsupported_media_type: &http_unsupported_media_type 415
-  http_requested_range_not_satisfiable: &http_requested_range_not_satisfiable 416
-  http_expectation_failed: &http_expectation_failed 417
-  http_im_a_teapot: &http_im_a_teapot 418
-  http_misdirected_request: &http_misdirected_request 421
-  http_unprocessable_entity: &http_unprocessable_entity 422
-  http_locked: &http_locked 423
-  http_failed_dependency: &http_failed_dependency 424
-  http_upgrade_required: &http_upgrade_required 426
-  http_precondition_required: &http_precondition_required 428
-  http_too_many_requests: &http_too_many_requests 429
-  http_request_header_fields_too_large: &http_request_header_fields_too_large 431
-  http_connection_closed_without_response: &http_connection_closed_without_response 444
-  http_unavailable_for_legal_reasons: &http_unavailable_for_legal_reasons 451
-  http_client_closed_request: &http_client_closed_request 499
-
-  # Server errors
-  http_internal_server_error: &http_internal_server_error 500
-  http_not_implemented: &http_not_implemented 501
-  http_bad_gateway: &http_bad_gateway 502
-  http_service_unavailable: &http_service_unavailable 503
-  http_gateway_timeout: &http_gateway_timeout 504
-  http_version_not_supported: &http_version_not_supported 505
-  http_variant_also_negotiates: &http_variant_also_negotiates 506
-  http_insufficient_storage: &http_insufficient_storage 507
-  http_loop_detected: &http_loop_detected 508
-  http_not_extended: &http_not_extended 510
-  http_network_authentication_required: &http_network_authentication_required 511
-  http_network_connection_timeout_error: &http_network_connection_timeout_error 599
-
-apiCode:
-  # Errors
-  E_A001:
-    status: *http_not_found
-    message: "This page does not exist."
-
-  E_A002:
-    status: *http_unauthorized
-    message: "You need a valid authentication to the API. You need to send a valid token (which has not expired and whose the IP address correspond to yours)."
-
-  E_A003:
-    status: *http_unauthorized
-    message: "Incorrect information of connection. The email or the password does not valid."
-
-  E_A004:
-    status: *http_unprocessable_entity
-    message: "The :key may not exist or can contain an error in the name or in the format."
-  
-  E_A005:
-    status: *http_unprocessable_entity
-    message: "No content found with this id in the table :key."
-  
-
-  # Success
-  S_G001:
-    status: *http_ok
-    message: "The content is retrieved with success."
-  
-  S_PO001:
-    status: *http_created
-    message: "The content is added with success."
-  
-  S_PU001:
-    status: *http_ok
-    message: "The content is updated with success."
-  
-  S_D001:
-    status: *http_ok
-    message: "The content is deleted with success."
-
 token:
-  expire: 604800 # 7 days in seconds (set NULL if you want no expiration token)
+  expire: TOKEN_EXPIRE # 7 days in seconds (set NULL if you want no expiration token)
 
 docTags:
   name: DescriptionTag
   token: FlagTag
   codes: ArrayTag
   render: DescriptionTag
+  table: DescriptionTag
 
 path:
   foo: bar

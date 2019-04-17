@@ -197,7 +197,7 @@ class Utils
      * (Work only if the property is not in the $escape array)
      * With this method, the $user->firstname is equal to 'John'
      * @param object $haystack
-     * @param object $needle
+     * @param object|array $needle
      * @param array $escape
      */
     public static function setValuesInObject(&$haystack, $needle, $escape = []) {

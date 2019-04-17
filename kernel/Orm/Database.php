@@ -1,70 +1,17 @@
 <?php
 namespace Kernel\Orm;
 use Controllers\Controller;
+use Controllers\Docs;
+use Jasny\PhpdocParser\PhpdocParser;
+use Jasny\PhpdocParser\Set\PhpDocumentor;
+use Jasny\PhpdocParser\Tag\DescriptionTag;
+use Kernel\Tools\Collection\Collection;
 use Kernel\Tools\Utils;
-use PDO;
+use Models\Entity;
+use Models\User;
 
-class Database
+Trait Database
 {
-    private static $_pdo;
-
-    public function __construct($id = null, $needOwner = false)
-    {
-        $class = get_called_class();
-        if (null == $id && null == $this->id) {
-            $vars = $class::getColumns($class::getTable());
-            foreach ($vars as $v) {
-                $key = $v['Field'];
-                $this->$key = $v['Default'];
-            }
-        }
-        elseif (null != $id) {
-            $query = 'SELECT * FROM `' . $class::getTable() . '` WHERE id' . ' = ?';
-            $stmt = self::_getPdo()->prepare($query);
-            $stmt->execute([$id]);
-            $attrs = $stmt->fetchAll(\PDO::FETCH_OBJ);
-
-            // Stop and render the A006 code if the id does not exist
-            if (!isset($attrs[0])) {
-                Controller::render('E_A006', false, $class::getTable());
-            }
-
-            if ($needOwner && isset($attrs[0]->user_id)) {
-                if ($attrs[0]->user_id != Auth::getUser()->id) {
-                    Controller::render('E_A006', false, 'user');
-                }
-            }
-
-            foreach ($attrs[0] as $key => $value) {
-                $this->$key = $value;
-            }
-        }
-    }
-
-    /**
-     * Set and get PDO
-     * @return PDO
-     */
-    private static function _getPdo()
-    {
-        if (!is_null(self::$_pdo)) return self::$_pdo;
-        try
-        {
-            $db = Utils::getConfigElement('database');
-            $pdo = new PDO('mysql:dbname='. $db['dbname'] .';host='. $db['host'], $db['user'], $db['password']);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        }
-        catch(\Exception $e)
-        {
-            die($e->getMessage());
-        }
-        self::$_pdo = $pdo;
-        self::$_pdo->exec('SET NAMES \'utf8\'');
-        self::$_pdo->query('SET NAMES \'utf8\'');
-        self::$_pdo->prepare('SET NAMES \'utf8\'');
-        return self::$_pdo;
-    }
-
     /**
      * Get table which called.
      * @return string
@@ -72,8 +19,14 @@ class Database
     public static function getTable()
     {
         $class = get_called_class();
-        if (isset($class::$_table)) {
-            return $class::$_table;
+
+        $doc = (new \ReflectionClass($class))->getDocComment();
+
+        if (strpos($doc, "@table")) {
+            $table = substr($doc, strpos($doc, "@table") + 6);
+            $table = explode(" ", $table)[1];
+
+            return trim($table);
         } else {
             return strtolower(explode('\\', $class)[1]);
         }
@@ -86,25 +39,33 @@ class Database
      */
     public static function getColumns($table = null)
     {
-        if (is_null($table)) {
+        if (null == $table) {
             $table = self::getTable();
         }
-        $statement = 'SHOW COLUMNS FROM `' . $table . '`';
+
+        $stmt = 'SHOW COLUMNS FROM `' . $table . '`';
+
         try {
-            $q = self::_getPdo()->prepare($statement);
+            $q = Connection::getPdo()->prepare($stmt);
             $q->execute();
             return $q->fetchAll(\PDO::FETCH_ASSOC);
+
         } catch (\Exception $e) {
             die($e->getMessage());
         }
     }
 
+    /**
+     * Get table
+     * @return mixed
+     */
     public static function getTables()
     {
         try {
-            $q = self::_getPdo()->prepare("SHOW TABLES");
+            $q = Connection::getPdo()->prepare("SHOW TABLES");
             $q->execute();
             return $q->fetchAll(\PDO::FETCH_ASSOC);
+
         } catch (\Exception $e) {
             die($e->getMessage());
         }
@@ -134,11 +95,11 @@ class Database
      * @param array $params
      * @param null $order
      * @param null $limit
-     * @return array
+     * @return Collection
      */
     public static function where($where, $params = [], $order = null, $limit = null)
     {
-        $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::_order($order) . self::_limit($limit);
+        $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::order($order) . self::limit($limit);
         return self::query($query, $params);
     }
 
@@ -146,25 +107,22 @@ class Database
      * Get first row with SELECT query and clause WHERE
      * @param $where
      * @param $params
-     * @return array || null
+     * @return self
      */
     public static function whereFirst($where, $params)
     {
-        $res = self::where($where, $params);
-        return isset($res[0]) ? $res[0] : null;
+        return self::where($where, $params)->getFirst();
     }
 
     /**
      * Get last row with SELECT query and clause WHERE
      * @param $where
      * @param $params
-     * @return array | null
+     * @return self
      */
     public static function whereLast($where, $params)
     {
-        $array = self::where($where, $params);
-        $lastKey = count($array) - 1;
-        return isset($array[$lastKey]) ? $array[$lastKey] : null;
+        return self::where($where, $params)->getLast();
     }
 
     /**
@@ -172,46 +130,44 @@ class Database
      * @param $params
      * @param null $order
      * @param null $limit
-     * @return array
+     * @return Collection
      */
     public static function find($params, $order = null, $limit = null)
     {
         $where = [];
         $p = [];
         foreach ($params as $k => $v) {
-            $where[] = '`' . $k . '`=?';
+            $where[] = '`' . $k . '` = ?';
             $p[] = $v;
         }
+
         return self::where(implode(' and ', $where), $p, $order, $limit);
     }
 
     /**
      * Get first row by params
      * @param $params
-     * @return array || null
+     * @return self
      */
     public static function findFirst($params)
     {
-        $array = self::find($params);
-        return isset($array[0]) ? $array[0] : null;
+        return self::find($params)->getFirst();
     }
 
     /**
      * Get last row by params
      * @param $params
-     * @return array || null
+     * @return self
      */
     public static function findLast($params)
     {
-        $array = self::find($params);
-        $lastKey = count($array) - 1;
-        return isset($array[$lastKey]) ? $array[$lastKey] : null;
+        return self::find($params)->getLast();
     }
 
     /**
      * Get first row by id
      * @param $id
-     * @return array
+     * @return self
      */
     public static function getById($id)
     {
@@ -219,14 +175,32 @@ class Database
     }
 
     /**
-     * Get all datas from table
+     * Get all data from table
      * @param null $order
      * @param null $limit
-     * @return array
+     * @return Collection
      */
     public static function getAll($order = null, $limit = null)
     {
-        return self::query('SELECT * FROM '. self::getTable() . self::_order($order) . self::_limit($limit));
+        return self::query('SELECT * FROM '. self::getTable() . self::order($order) . self::limit($limit));
+    }
+
+    /**
+     * Get the first row
+     * @return self
+     */
+    public static function getFirst()
+    {
+        return self::getAll()->getFirst();
+    }
+
+    /**
+     * Get the last row
+     * @return self
+     */
+    public static function getLast()
+    {
+        return self::getAll()->getLast();
     }
 
     /**
@@ -234,7 +208,7 @@ class Database
      * @param $order
      * @return string
      */
-    private static function _order($order)
+    private static function order($order)
     {
         return (null !== $order) ? (' ORDER BY ' . $order) : '';
     }
@@ -244,7 +218,7 @@ class Database
      * @param $limit
      * @return string
      */
-    private static function _limit($limit)
+    private static function limit($limit)
     {
         return (null !== $limit) ? (' LIMIT ' . $limit) : '';
     }
@@ -259,10 +233,16 @@ class Database
         if (null !== $where) { $where = ' WHERE '. $where; }
         else { $where = ''; }
 
+        /*$query = new Query();
+        $query->select("count(*)")
+            ->from(self::getTable())
+            ->where($where);
+        return (int) self::query($query->getStatement(), $params)[0]->nb;*/
+
         return (int) self::query(
             'SELECT count(*) as nb FROM '. self::getTable() . $where,
             $params
-        )[0]->nb;
+        )->getFirst()->nb;
     }
 
     /**
@@ -273,21 +253,45 @@ class Database
      */
     public function store()
     {
-        return (null != $this->id) ? $this->update() : $this->insert();
+        return (null != $this->getId()) ? $this->update() : $this->insert();
+    }
+
+    /**
+     * Get the key and the value with the getter
+     * @param $key
+     * @return array|bool
+     */
+    private function setKeysAndValues(&$keys = [], &$values = [])
+    {
+        $reflect = new \ReflectionObject($this);
+
+        foreach ($reflect->getProperties() as $property) {
+            if (!$property->isStatic()) {
+
+                $propertyName = $property->getName();
+                $getter = "get" . Utils::toPascalCase($propertyName);
+
+                if (is_object($this->$getter())) {
+                    if (method_exists($this->$getter(), "getId")) {
+                        $keys[] = '`' . $propertyName . '_id`';
+                        $values[] = $this->$getter()->getId();
+                    }
+                } else {
+                    $keys[] = '`' . $propertyName . '`';
+                    $values[] = $this->$getter();
+                }
+            }
+        }
     }
 
     /**
      * Insert new values
-     * @return int
+     * @return self
      */
     private function insert()
     {
-        $keys = [];
-        $values = [];
-        foreach ($this as $k => $v){
-            $keys[] = '`' . $k . '`';
-            $values[] = $v;
-        }
+        $this->setKeysAndValues($keys, $values);
+
         $keys = implode(',', $keys);
 
         $q = self::exec(
@@ -295,7 +299,13 @@ class Database
             $values
         );
 
-        return $q ? self::getLastId() : false;
+        if ($q) {
+            $this->setId(self::getLastId());
+
+            return $this;
+        }
+
+        return false;
     }
 
     /**
@@ -305,16 +315,14 @@ class Database
      */
     private function update()
     {
-        $keys = [];
-        $values = [];
-        foreach ($this as $k => $v){
-            $keys[] = '`' . $k . '`';
-            $values[] = $v;
-        }
-        $values[] = $this->id;
+        $this->setKeysAndValues($keys, $values);
+
+        $values[] = $this->getId();
+
+        $keys = implode(' = ?, ', $keys);
 
         return self::exec(
-            'UPDATE '. self::getTable() .' SET '. implode(' = ?, ', $keys) . ' = ?' . ' WHERE id = ?',
+            'UPDATE '. self::getTable() .' SET '. $keys . ' = ?' . ' WHERE id = ?',
             $values
         );
     }
@@ -326,61 +334,22 @@ class Database
     public function delete() {
         $params = [];
         $values = [];
-        if (empty($this->id)) {
+        if (empty($this->getId())) {
             foreach ($this as $k => $v) {
-                if (null != $v) {
+
+                $getter = "get" . Utils::toPascalCase($k);
+
+                if (null != $this->$getter()) {
                     $params[] = $k;
-                    $values[] = $v;
+                    $values[] = $this->$getter();
                 }
             }
-        }
-        else {
+        } else {
             $params = ['id'];
-            $values[] = $this->id;
+            $values[] = $this->getId();
         }
-        $res = $this->exec('DELETE FROM ' . self::getTable() . ' WHERE ' . implode(' = ? AND ', $params) . ' = ?', $values);
-        return $res;
-    }
 
-    /**
-     * Get info with foreign key
-     * @param array $targetModel
-     */
-    public function infoFk($targetModel = [])
-    {
-        foreach ($this as $k => $v) {
-            if (strpos($k, '_id')) {
-                $attr = substr($k, 0, strlen($k) - 3);
-                if (array_key_exists($k, $targetModel)) {
-                    $class = "\Models\\". ucfirst($targetModel[$k]);
-                } else {
-                    $class = implode(array_map('ucfirst', explode('_', $attr)));
-                    $class = "\Models\\$class";
-                }
-                $this->$attr = $class::getById($v);
-                unset($this->$k);
-            }
-        }
-    }
-
-    /**
-     * Render error if id does not exist
-     * @param object $handle
-     */
-    public static function checkIdExists($handle)
-    {
-        foreach ($handle as $k => $v) {
-            if (strpos($k, '_id')) {
-                $attr = substr($k, 0, strlen($k) - 3);
-
-                $class = implode(array_map('ucfirst', explode('_', $attr)));
-                $class = "\Models\\$class";
-
-                if (null == $class::getById($v)) {
-                    Controller::render('E_A006', false, $k);
-                }
-            }
-        }
+        return $this->exec('DELETE FROM ' . self::getTable() . ' WHERE ' . implode(' = ? AND ', $params) . ' = ?', $values);
     }
 
     /**
@@ -388,19 +357,53 @@ class Database
      */
     public static function getLastId()
     {
-        return self::_getPdo()->lastInsertId();
+        return Connection::getPdo()->lastInsertId();
+    }
+
+    /**
+     * Convert all foreign key to object
+     */
+    private function foreignKeyToObject()
+    {
+        foreach ($this as $k => $v) {
+            if (strpos($k, '_id')) {
+                $attr = substr($k, 0, strlen($k) - 3);
+                $attr = Utils::toPascalCase($attr);
+
+                $annotations = Docs::getPhpDoc($this, "get$attr");
+
+                if (isset($annotations["return"])) {
+                    $class = '\Models\\' . $annotations["return"];
+                } else {
+                    $class = '\Models\\' . $attr;
+                }
+
+                $class = new $class($v);
+
+                $setter = "set$attr";
+                $this->$setter($class);
+
+                unset($this->$k);
+            }
+        }
     }
 
     /**
      * @param $statement string
      * @param $params array
-     * @return array
+     * @return Collection
      */
     public static function query($statement, $params = null)
     {
-        $q = self::_getPdo()->prepare($statement);
+        $q = Connection::getPdo()->prepare($statement);
         $q->execute($params);
-        return $q->fetchAll(PDO::FETCH_CLASS, get_called_class());
+        $res = $q->fetchAll(\PDO::FETCH_CLASS, get_called_class());
+
+        foreach ($res as $item) {
+            $item->foreignKeyToObject();
+        }
+
+        return Collection::from($res);
     }
 
     /**
@@ -410,7 +413,7 @@ class Database
      */
     public static function exec($statement, $params)
     {
-        $q = self::_getPdo()->prepare($statement);
+        $q = Connection::getPdo()->prepare($statement);
         return $q->execute($params);
     }
 }

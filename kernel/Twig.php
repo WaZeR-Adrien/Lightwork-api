@@ -1,11 +1,11 @@
 <?php
 namespace Kernel;
 
-use http\Url;
-use Twig\TwigFilter;
-
 class Twig
 {
+    /**
+     * @return \Twig_Environment
+     */
     public static function getInstance()
     {
         $loader = new \Twig_Loader_Filesystem('../app/views/');
@@ -20,6 +20,9 @@ class Twig
         return $twig;
     }
 
+    /**
+     * @param $twig
+     */
     public static function addFilter($twig)
     {
         $twig->addFilter( new \Twig_SimpleFilter('cast_to_array', function ($stdClassObject) {
@@ -32,11 +35,17 @@ class Twig
         }));
     }
 
+    /**
+     * @param $twig
+     */
     public static function addExtension($twig)
     {
         $twig->addExtension(new \Twig_Extension_Debug());
     }
 
+    /**
+     * @param $twig
+     */
     public static function addGlobal($twig)
     {
         $url = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];

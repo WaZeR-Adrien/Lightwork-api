@@ -1,5 +1,5 @@
 <?php
-namespace Kernel\Tools\Collection;
+namespace Kernel\Orm;
 
 class OrmException extends \Exception
 {

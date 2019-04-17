@@ -3,63 +3,117 @@ namespace Kernel\Orm;
 
 class Query
 {
-    /**
-     * @var string
-     */
-    private $content;
+    // Statements
+    const SELECT_FROM = "SELECT :fields FROM :tables";
+    const INSERT_INTO = "INSERT INTO :table(:fields) VALUES (:values)";
+    const UPDATE_SET = "UPDATE :table SET :fields";
+
+    // Clauses
+    const WHERE = " WHERE :conditions";
+    const ORDER_BY = " ORDER BY :fields";
+    const LIMIT = " LIMIT :quantity";
+
+    // Aggregation
+    const AVG = "AVG(:field)";
+    const SUM = "SUM(:field)";
+    const COUNT = "COUNT(:field)";
+    const MAX = "MAX(:field)";
+    const MIN = "MIN(:field)";
 
     /**
-     * @var array
+     * Final statement
+     * @var string
      */
-    private $params;
+    private $statement = "";
 
     /**
      * @return string
      */
-    public function getContent()
+    public function getStatement()
     {
-        return $this->content;
+        return $this->statement;
     }
 
     /**
-     * @param string $content
+     * @param string $statement
      */
-    public function setContent($content)
+    public function setStatement($statement)
     {
-        $this->content = $content;
+        $this->statement = $statement;
     }
 
     /**
-     * @return array
+     * @param string $clause
+     * @throws \Exception
      */
-    public function getParams()
+    public function checkIfNotEmpty()
     {
-        return $this->params;
+        if (!empty($this->statement)) {
+            throw new \Exception("There are already an statement");
+        }
     }
 
     /**
-     * @param array $params
+     * @param string $clause
+     * @throws \Exception
      */
-    public function setParams($params)
+    public function checkIfNotAlreadyExist($clause)
     {
-        $this->params = $params;
+        if (strpos($this->statement, $clause)) {
+            throw new \Exception("The clause $clause already exist");
+        }
     }
 
     /**
-     * @param array $select
-     * @param string|null $count
-     * @param string|null $avg
-     * @param string|null $sum
-     * @return Query
+     * @param string $clause
+     * @param string $prevClause
+     * @throws \Exception
      */
-    public function select($select = [], $count = null, $avg = null, $sum = null)
+    public function checkIfPreviousClauseIsSet($clause, $prevClause)
     {
-        $others = ["count" => $count, "avg" => $avg, "sum" => $sum];
-        foreach ($others as $key => $value) {
-            if (null != $value) {$select[] = $this->$key($value);}
+        if (strpos($this->statement, $prevClause)) {
+            throw new \Exception("The clause $clause need the previous clause $prevClause");
+        }
+    }
+
+    /**
+     * @param string $clause
+     * @param string $nextClause
+     * @throws \Exception
+     */
+    public function checkIfNextClauseIsSet($clause, $nextClause)
+    {
+        if (strpos($this->statement, $nextClause)) {
+            throw new \Exception("The clause $clause need the next clause $nextClause");
+        }
+    }
+
+    /**
+     * Push content in the statement
+     * @param int $clause
+     * @param array $needle
+     */
+    private function pushInStatement($key, $value, $clause = null)
+    {
+        if (null != $clause) {
+            $statement = $clause;
+        } else {
+            $statement = $this->statement;
         }
 
-        $this->content = "SELECT " . implode(', ', $select) . " ";
+        $this->statement .= preg_replace("/$key/", $value, $statement);
+    }
+
+    /**
+     * @param string $select
+     * @return Query
+     * @throws \Exception
+     */
+    public function select(...$select)
+    {
+        $this->checkIfNotAlreadyExist("SELECT");
+
+        $this->pushInStatement(":fields", implode(", ", $select), self::SELECT_FROM);
 
         return $this;
     }
@@ -92,23 +146,32 @@ class Query
     }
 
     /**
-     * @param array $from
+     * @param string $from
      * @return Query
+     * @throws \Exception
      */
-    public function from($from = [])
+    public function from(...$from)
     {
-        $this->content .= "FROM " . implode(', ', $from) . " ";
+        $this->checkIfPreviousClauseIsSet("FROM", "SELECT");
+
+        $this->checkIfNotAlreadyExist("FROM");
+
+        $this->pushInStatement(":tables", implode(", ", $from));
 
         return $this;
     }
 
     /**
-     * @param array $where
+     * @param string $where
      * @return Query
      */
-    public function where($where = [])
+    public function where(...$where)
     {
-        $this->content .= "WHERE " . implode(' AND ', $where) . " ";
+        $this->checkIfPreviousClauseIsSet("WHERE", "FROM");
+
+        $this->checkIfNotAlreadyExist("WHERE");
+
+        $this->pushInStatement(":conditions", implode(" AND ", $where), self::WHERE);
 
         return $this;
     }
@@ -117,9 +180,13 @@ class Query
      * @param string $order
      * @return Query
      */
-    public function orderBy($order)
+    public function orderBy(...$order)
     {
-        $this->content .= "ORDER BY $order ";
+        $this->checkIfPreviousClauseIsSet("WHERE", "FROM");
+
+        $this->checkIfNotAlreadyExist("WHERE");
+
+        $this->pushInStatement(":conditions", implode(", ", $order), self::ORDER_BY);
 
         return $this;
     }
@@ -130,7 +197,7 @@ class Query
      */
     public function limit($limit)
     {
-        $this->content .= "LIMIT $limit ";
+        $this->statement .= "LIMIT $limit ";
 
         return $this;
     }
@@ -140,9 +207,9 @@ class Query
      * @param array $fields
      * @return Query
      */
-    public function insert($table, $fields = [])
+    public function insert($table, ...$fields)
     {
-        $this->content = "INSERT $table(" . implode(', ', $fields) . ") ";
+        $this->pushInStatement("INSERT", "$table(" . implode(', ', $fields) . ") ");
 
         return $this;
     }
@@ -151,9 +218,9 @@ class Query
      * @param array $values
      * @return Query
      */
-    public function into($values = [])
+    public function into(...$values)
     {
-        $this->content .= "INTO (" . implode(', ', $values) . ")";
+        $this->pushInStatement("INTO", "(" . implode(', ', $values) . ")");
 
         return $this;
     }
@@ -164,35 +231,22 @@ class Query
      */
     public function update($table)
     {
-        $this->content = "UPDATE $table ";
+        $this->statement = "UPDATE $table ";
 
         return $this;
     }
 
     /**
-     * @param array $set
+     * @param string $set
      * @return Query
      */
-    public function set($set = [])
+    public function set(...$set)
     {
-        $this->content .= "SET (" . implode(', ', $set) . ") ";
+        $this->statement .= "SET (" . implode(', ', $set) . ") ";
 
         return $this;
     }
 }
-
-$query = new Query();
-
-$query->select(["id"], "*")
-    ->from(["user"])
-    ->where(["age > 10", "age <= 18"])
-    ->orderBy("id DESC")
-    ->limit(10);
-
-$query->insert("user", ["name", "age"])
-    ->into(["?", "?"]);
-
-var_dump($query->getContent());
 
 
 /**
