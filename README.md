@@ -1,5 +1,8 @@
-# Lightwork API [v4.0.0]
+# Lightwork API [v5.0.0]
 Lightwork API is a light **PHP framework** object oriented with many features in MVC.
+
+> The documentation for the version 5 is coming soon
+> The actual documentation is not good (please wait)
 
 ## Installation :
 - Clone the repository
