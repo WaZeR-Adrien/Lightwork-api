@@ -167,15 +167,15 @@ class Route
     private function setRequestData(Request &$request)
     {
         if (in_array($request->getMethod(), ['PUT', 'PATCH'])) {
-            $request->setBody( new Collection((array) Utils::parse_http_put()) );
+            $request->setBody( Collection::from((array) Utils::parse_http_put()) );
         } else if ($request->getMethod() === 'POST') {
-            $request->setBody( new Collection($_POST) );
+            $request->setBody( Collection::from($_POST) );
         }
 
-        $request->setArgs( new Collection($this->matches) );
+        $request->setArgs( Collection::from($this->matches) );
 
         if (!empty($_FILES)) {
-            $request->setFiles( new Collection($_FILES) );
+            $request->setFiles( Collection::from($_FILES) );
         }
     }
 
