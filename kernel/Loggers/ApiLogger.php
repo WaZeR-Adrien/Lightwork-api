@@ -103,8 +103,9 @@ class ApiLogger extends Logger
             $logs = [];
             while (($line = fgetcsv($file)) !== FALSE) {
                 $logs[] = [
-                    'code' => trim($line[$index['code']]),
                     'date' => trim($line[$index['date']]),
+                    'level' => trim($line[$index['level']]),
+                    'code' => trim($line[$index['code']]),
                     'status' => trim($line[$index['status']]),
                     'method' => trim($line[$index['method']]),
                     'endpoint' => trim($line[$index['endpoint']]),
