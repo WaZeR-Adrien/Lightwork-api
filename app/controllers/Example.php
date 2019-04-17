@@ -1,9 +1,9 @@
 <?php
 namespace Controllers;
-use DusanKasan\Knapsack\Collection;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
 use Kernel\Tools\Utils;
+use Models\Auth;
 
 class Example extends Controller
 {
@@ -19,15 +19,18 @@ class Example extends Controller
      */
     public static function index(Request $request, Response $response)
     {
+        $lastAuth = Auth::getLast()->toArray();
+
         $response->getBody()
             ->add($request->getArgs()->get("slug"), "slug")
-            ->add($request->getArgs()->get("id"), "id");
+            ->add($request->getArgs()->get("id"), "id")
+            ->add($lastAuth, "auth");
 
         return $response->fromApi("S_G001")->toJson();
     }
 
     /**
-     * @name Get all examples
+     * @name Get all auths
      * @codes S_G001
      * @render json
      * @param Request $request
@@ -37,14 +40,16 @@ class Example extends Controller
     public static function getAll(Request $request, Response $response)
     {
         $response->setBody(new \Kernel\Tools\Collection\Collection(
-            \Models\Example::getAll()
+            Auth::getAll()->map(function (Auth $auth) {
+                return $auth->fetch(true)->toArray();
+            })
         ));
 
         return $response->fromApi('S_G001')->toJson();
     }
 
     /**
-     * @name Edit an example
+     * @name Edit an auth
      * @token
      * @codes S_PU001, E_A005
      * @render json
@@ -54,24 +59,16 @@ class Example extends Controller
      */
     public static function update(Request $request, Response $response)
     {
-        $example = new \Models\Example($request->getArgs()->get("id"));
+        $auth = new Auth($request->getArgs()->get("id"));
 
-        $body = $request->getBody();
+        $auth->setUser(User::getById( $request->getBody()->get("user_id") ));
+        $auth->store();
 
-        if (!empty($example)) {
-            $example->setField1($body->get("field1"));
-            $example->setField2($body->get("field2"));
-            $example->setField3($body->get("field3"));
-            $example->store();
-
-            return $response->fromApi('S_PU001')->toJson();
-        }
-
-        return $response->fromApi('E_A005', 'Example')->toJson();
+        return $response->fromApi('S_PU001')->toJson();
     }
 
     /**
-     * @name Add a new example
+     * @name Add a new auth
      * @codes S_PO001
      * @render json
      * @param Request $request
@@ -80,17 +77,26 @@ class Example extends Controller
      */
     public static function add(Request $request, Response $response)
     {
-        $example = new \Models\Example();
+        $auth = new Auth();
 
-        Utils::setValuesInObject($example, $request->getBodies());
+        $auth->setToken(Utils::createToken());
+        $auth->setUser(User::getById( $request->getBody()->get("user_id") ));
+        $auth->setDate(time());
 
-        $example->store();
+        /*
+         * If your are too many values which is sent and you do not need treatment, you can use :
+         * Utils::setValuesInObject($auth, $request->getBody()->getAll());
+         *
+         * In this example, this allow to set all values $request->getBody()->getAll() in the $auth object
+         */
+
+        $auth->store();
 
         return $response->fromApi('S_PO001')->toJson();
     }
 
     /**
-     * @name Remove an example
+     * @name Remove an auth
      * @codes S_D001
      * @render json
      * @param Request $request
@@ -99,8 +105,8 @@ class Example extends Controller
      */
     public static function delete(Request $request, Response $response)
     {
-        $example = new \Models\Example($request->getArgs()->get("id"));
-        $example->delete();
+        $auth = new Auth($request->getArgs()->get("id"));
+        $auth->delete();
 
         return $response->fromApi('S_D001')->toJson();
     }

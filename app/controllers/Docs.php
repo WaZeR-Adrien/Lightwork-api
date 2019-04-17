@@ -87,7 +87,7 @@ class Docs extends Controller
         $params = explode('#', $initialRoute->getCallable());
         $controller = "\Controllers\\$params[0]";
 
-        $annotations = Docs::getPhpDoc($controller, $params[1]);
+        $annotations = self::getPhpDoc($controller, $params[1]);
 
         // Create route with empty codes
         $route = [
@@ -219,9 +219,13 @@ class Docs extends Controller
      * @return array
      * @throws \ReflectionException
      */
-    public static function getPhpDoc($class, $method)
+    public static function getPhpDoc($class, $method = null)
     {
-        $doc = (new \ReflectionMethod($class, $method))->getDocComment();
+        if (null != $method) {
+            $doc = (new \ReflectionMethod($class, $method))->getDocComment();
+        } else {
+            $doc = (new \ReflectionClass($class))->getDocComment();
+        }
 
         $additionalTags = [];
 
