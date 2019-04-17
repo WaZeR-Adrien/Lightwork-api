@@ -1,7 +1,8 @@
 <?php
-namespace Kernel\Tools;
+namespace Kernel\Tools\File;
 
 use Kernel\Config;
+use Kernel\Tools\Collection\MailException;
 
 class Mail
 {
@@ -56,6 +57,7 @@ class Mail
 
     /**
      * Send the mail
+     * @throws MailException
      */
     public function send()
     {
@@ -103,7 +105,7 @@ class Mail
 
             $mail->send();
         } catch (Exception $e) {
-            echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+            throw new MailException($e->getMessage());
         }
     }
 }
