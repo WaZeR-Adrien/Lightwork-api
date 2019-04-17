@@ -35,6 +35,11 @@ class Logger
         $this->level = $level;
     }
 
+    public static function getInstance($level = self::LOG_DEBUG)
+    {
+        return new self(Logger::DEFAULT_PATH . date("d-m-Y") . ".log", $level);
+    }
+
     /**
      * Save a new log
      * @throws LogException

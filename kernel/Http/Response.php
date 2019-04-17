@@ -2,7 +2,7 @@
 namespace Kernel\Http;
 
 use GreenCape\Xml\Converter;
-use Kernel\Logs\Log;
+use Kernel\Loggers\ApiLogger;
 use Kernel\Router\Route;
 use Kernel\Tools\Collection\Collection;
 use Kernel\Twig;
@@ -55,8 +55,8 @@ class Response
     {
         $this->route = $route;
         $this->status = $status;
-        $this->headers = new Collection();
-        $this->headers->add($contentType, "Content-Type");
+        $this->headers = ( new Collection() )
+            ->add($contentType, "Content-Type");
         $this->body = new Collection();
     }
 
@@ -146,23 +146,20 @@ class Response
      */
     private function addEventLog($key)
     {
-        $date = date('d/m/Y H:i:s');
-
         $ip = $_SERVER['REMOTE_ADDR'];
 
         // Create new log
-        $log = new Log(
+        $logger = new ApiLogger();
+
+        // Save in logs
+        $logger->write(
             $this->apiCode->getCode(),
             $key,
-            $date,
             $this->getStatus(),
             (null != $this->route) ? $this->route->getMethod() : "",
             (null != $this->route) ? $this->route->getPath() : "",
             $ip
         );
-
-        // Save in logs
-        $log->save();
     }
 
     /**
@@ -217,8 +214,7 @@ class Response
         $this->headers->update("Content-Type", "application/json");
 
         // Convert the content to JSON
-        $this->content =
-            json_encode($this->body->getAll());
+        $this->content = json_encode($this->body->getAll());
 
         return $this;
     }
@@ -235,8 +231,7 @@ class Response
         $body = json_decode(json_encode($this->body->getAll()), true);
 
         // Convert the content to XML
-        $this->content =
-            new Converter($body);
+        $this->content = new Converter($body);
 
         return $this;
     }
@@ -250,8 +245,7 @@ class Response
         $this->headers->update("Content-Type", "text/yaml");
 
         // Convert the content to YAML
-        $this->content =
-            Yaml::dump($this->body->getAll());
+        $this->content = Yaml::dump($this->body->getAll());
 
         return $this;
     }

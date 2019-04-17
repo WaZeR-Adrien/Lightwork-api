@@ -30,7 +30,7 @@ class Collection
      */
     public function __construct()
     {
-        $this->logger = new Logger( Logger::DEFAULT_PATH . date("d-m-Y") . ".log" );
+        $this->logger = Logger::getInstance();
     }
 
     /**

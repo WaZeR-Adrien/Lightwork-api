@@ -1,11 +1,50 @@
 <?php
 namespace Kernel\Http;
 
-use Kernel\Config;
-use Kernel\Tools\Utils;
+use Kernel\Loggers\Logger;
 
 class ApiCode implements \JsonSerializable
 {
+    // Errors
+    const E_A001 = [
+        "status" => StatusCode::HTTP_NOT_FOUND,
+        "message" => "This page does not exist."
+    ];
+    const E_A002 = [
+        "status" => StatusCode::HTTP_UNAUTHORIZED,
+        "message" => "You need a valid authentication to the API. You need to send a valid token (which has not expired and whose the IP address correspond to yours)."
+    ];
+    const E_A003 = [
+        "status" => StatusCode::HTTP_UNAUTHORIZED,
+        "message" => "This page does not exist."
+    ];
+    const E_A004 = [
+        "status" => StatusCode::HTTP_UNPROCESSABLE_ENTITY,
+        "message" => "The :key may not exist or can contain an error in the name or in the format."
+    ];
+    const E_A005 = [
+        "status" => StatusCode::HTTP_UNPROCESSABLE_ENTITY,
+        "message" => "No content found with this id in the table :key."
+    ];
+
+    // Success
+    const S_G001 = [
+        "status" => StatusCode::HTTP_OK,
+        "message" => "The content is retrieved with success."
+    ];
+    const S_PO001 = [
+        "status" => StatusCode::HTTP_CREATED,
+        "message" => "The content is added with success."
+    ];
+    const S_PU001 = [
+        "status" => StatusCode::HTTP_OK,
+        "message" => "The content is updated with success."
+    ];
+    const S_D001 = [
+        "status" => StatusCode::HTTP_OK,
+        "message" => "The content is deleted with success."
+    ];
+
     /**
      * Code
      * @var string
@@ -31,16 +70,20 @@ class ApiCode implements \JsonSerializable
     public function __construct($code)
     {
         try {
-            if (isset(Utils::getConfigElement("apiCode")[$code])) {
-                $resCode = Utils::getConfigElement("apiCode")[$code];
+            if (defined("self::$code")) {
+                $resCode = constant("self::$code");
 
                 $this->code = $code;
                 $this->status = $resCode['status'];
                 $this->message = $resCode['message'];
             } else {
-                throw new \Exception("Api code does not exist");
+                // Register log
+                $logger = Logger::getInstance(Logger::LOG_ERROR);
+                $logger->write("Api code $code does not exist. Code : " . HttpException::API_CODE_DOES_NOT_EXIST);
+
+                throw new HttpException("Api code $code does not exist", HttpException::API_CODE_DOES_NOT_EXIST);
             }
-        } catch (\Exception $e) {
+        } catch (HttpException $e) {
             die($e->getMessage());
         }
     }
