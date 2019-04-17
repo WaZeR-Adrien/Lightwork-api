@@ -1,6 +1,8 @@
 <?php
 namespace Kernel\Tools\Collection;
 
+use Kernel\Loggers\Logger;
+
 class Collection
 {
     /**
@@ -9,9 +11,27 @@ class Collection
      */
     private $items = [];
 
+    /**
+     * All alias to call the good method
+     * @var array
+     */
     private $alias = [
         "count" => "length", "all" => "getAll", "first" => "getFirst", "last" => "getLast"
     ];
+
+    /**
+     * The logger
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * Collection constructor.
+     */
+    public function __construct()
+    {
+        $this->logger = new Logger( Logger::DEFAULT_PATH . date("d-m-Y") . ".log" );
+    }
 
     /**
      * Collection constructor.
@@ -110,6 +130,10 @@ class Collection
         if (null != $key) {
 
             if ($this->keyExists($key, $this->items)) {
+                // Register log
+                $this->logger->setLevel(Logger::LOG_ERROR);
+                $this->logger->write("Key $key already in use. Code : " . CollectionException::KEY_ALREADY_USE);
+
                 throw new CollectionException("Key $key already in use.", CollectionException::KEY_ALREADY_USE);
             } else {
                 $this->items[$key] = $value;
@@ -166,6 +190,10 @@ class Collection
         if ($this->keyExists($key, $this->items)) {
             $this->items[$key] = $value;
         } else {
+            // Register log
+            $this->logger->setLevel(Logger::LOG_ERROR);
+            $this->logger->write("The key $key does not exist in the collection. Code : " . CollectionException::KEY_INVALID);
+
             throw new CollectionException("The key $key does not exist in the collection.", CollectionException::KEY_INVALID);
         }
 
@@ -183,6 +211,10 @@ class Collection
         if ($this->keyExists($key, $this->items)) {
             return $this->items[$key];
         } else {
+            // Register log
+            $this->logger->setLevel(Logger::LOG_ERROR);
+            $this->logger->write("The key $key does not exist in the collection. Code : " . CollectionException::KEY_INVALID);
+
             throw new CollectionException("The key $key does not exist in the collection.", CollectionException::KEY_INVALID);
         }
     }
@@ -237,6 +269,10 @@ class Collection
             }
 
         } else {
+            // Register log
+            $this->logger->setLevel(Logger::LOG_ERROR);
+            $this->logger->write("The key $keyOrValue does not exist in the collection. Code : " . CollectionException::KEY_INVALID);
+
             throw new CollectionException("The key $keyOrValue does not exist in the collection.", CollectionException::KEY_INVALID);
         }
 
@@ -301,6 +337,10 @@ class Collection
         if (array_key_exists($name, $this->alias)) {
             return call_user_func_array([$this, $this->alias[$name]], $args);
         }
+
+        // Register log
+        $this->logger->setLevel(Logger::LOG_ERROR);
+        $this->logger->write("Method or alias $name does not exist. Code : " . CollectionException::METHOD_DOES_NOT_EXIST);
 
         throw new CollectionException("Method or alias $name does not exist.", CollectionException::METHOD_DOES_NOT_EXIST);
     }

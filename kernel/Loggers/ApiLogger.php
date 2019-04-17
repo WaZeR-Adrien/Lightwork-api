@@ -8,18 +8,18 @@ class ApiLogger extends Logger
     /**
      * ApiLogger constructor.
      */
-    public function __construct()
+    public function __construct($level = parent::LOG_ERROR)
     {
-        parent::__construct(self::API_PATH);
+        parent::__construct(self::API_PATH, $level);
     }
 
     /**
      * Save a new log
      * @throws LogException
      */
-    public function write($code, $key, $status, $method, $endpoint, $ip)
+    public function write($code, $key, $status, $method, $path, $ip)
     {
-        parent::write("$code, $key, $status, $method, $endpoint, $ip");
+        parent::write("$code, $key, $status, $method, $path, $ip");
     }
 
     /**
