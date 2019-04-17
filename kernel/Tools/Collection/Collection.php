@@ -1,9 +1,6 @@
 <?php
 namespace Kernel\Tools\Collection;
 
-use function Jasny\object_get_properties;
-use Kernel\Tools\Utils;
-
 class Collection
 {
     /**
@@ -20,11 +17,13 @@ class Collection
      * Collection constructor.
      * @param array $firstitems
      */
-    public function __construct($firstItems = [])
+    public static function from($firstItems = [])
     {
-        $this->items = $firstItems;
-    }
+        $collection = new self();
+        $collection->items = $firstItems;
 
+        return $collection;
+    }
 
     /**
      * Check if the collection is empty
@@ -104,14 +103,14 @@ class Collection
      * @param mixed $value
      * @param string|null $key
      * @return Collection
-     * @throws KeyAlreadyUseException
+     * @throws CollectionException
      */
     public function add($value, $key = null)
     {
         if (null != $key) {
 
             if ($this->keyExists($key, $this->items)) {
-                throw new KeyAlreadyUseException("Key $key already in use.");
+                throw new CollectionException("Key $key already in use.", CollectionException::KEY_ALREADY_USE);
             } else {
                 $this->items[$key] = $value;
             }
@@ -160,14 +159,14 @@ class Collection
      * @param string $key
      * @param mixed $value
      * @return Collection
-     * @throws KeyAlreadyUseException
+     * @throws CollectionException
      */
     public function update($key, $value)
     {
         if ($this->keyExists($key, $this->items)) {
             $this->items[$key] = $value;
         } else {
-            throw new KeyAlreadyUseException("The key $key does not exist in the collection.");
+            throw new CollectionException("The key $key does not exist in the collection.", CollectionException::KEY_INVALID);
         }
 
         return $this;
@@ -177,14 +176,14 @@ class Collection
      * Get value of the collection with the key
      * @param string|int $key
      * @return mixed
-     * @throws KeyAlreadyUseException
+     * @throws CollectionException
      */
     public function get($key)
     {
         if ($this->keyExists($key, $this->items)) {
             return $this->items[$key];
         } else {
-            throw new KeyAlreadyUseException("The key $key does not exist in the collection.");
+            throw new CollectionException("The key $key does not exist in the collection.", CollectionException::KEY_INVALID);
         }
     }
 
@@ -223,7 +222,7 @@ class Collection
      * Drop value by key or directly by value
      * @param mixed $keyOrValue
      * @return Collection
-     * @throws KeyAlreadyUseException
+     * @throws CollectionException
      */
     public function drop($keyOrValue)
     {
@@ -238,7 +237,7 @@ class Collection
             }
 
         } else {
-            throw new KeyAlreadyUseException("The key $keyOrValue does not exist in the collection.");
+            throw new CollectionException("The key $keyOrValue does not exist in the collection.", CollectionException::KEY_INVALID);
         }
 
         return $this;
@@ -274,56 +273,20 @@ class Collection
      */
     public function reverse()
     {
-        return new self(array_reverse($this->items, true));
-    }
-
-    /**
-     * Convert all objects to arrays with the getters
-     * @return array
-     */
-    public function toArrays()
-    {
-        foreach ($this->items as $k => &$v) {
-            // If the value is an object :
-            // Get all values of the object with the getters and save in an array
-            if (is_object($v)) {
-
-                $array = [];
-                $reflect = new \ReflectionObject($v);
-                foreach ($reflect->getProperties() as $property) {
-                    $propertyName = $property->getName();
-
-                    $getter = "get" . Utils::toPascalCase($propertyName);
-                    $array[$propertyName] = $v->$getter();
-                }
-                $v = $array;
-                if ($k === 'user') {
-                    //var_dump($v);
-                }
-            }
-
-            // If the value is an array :
-            // Load this function to convert the sub objects in arrays...
-            if (is_array($v)) {
-                $collection = new Collection($v);
-                $v = $collection->toArrays();
-            }
-        }
-
-        return $this->items;
+        return self::from( array_reverse($this->items, true) );
     }
 
     /**
      * @param callable $callback
      * @return Collection
      */
-    public function map(callable $callback)
+    public function map($callback)
     {
         $keys = array_keys($this->items);
 
         $items = array_map($callback, $this->items, $keys);
 
-        return new self(array_combine($keys, $items));
+        return self::from( array_combine($keys, $items) );
     }
 
     /**
@@ -331,7 +294,7 @@ class Collection
      * @param $name
      * @param $args
      * @return mixed
-     * @throws MethodDoesNotExistsException
+     * @throws CollectionException
      */
     public function __call($name, $args)
     {
@@ -339,6 +302,6 @@ class Collection
             return call_user_func_array([$this, $this->alias[$name]], $args);
         }
 
-        throw new MethodDoesNotExistsException("Method or alias $name does not exist.");
+        throw new CollectionException("Method or alias $name does not exist.", CollectionException::METHOD_DOES_NOT_EXIST);
     }
 }
