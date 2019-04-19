@@ -1,6 +1,7 @@
 <?php
 namespace Kernel\Orm;
 
+use Kernel\Loggers\Logger;
 use Kernel\Tools\Utils;
 
 class Connection

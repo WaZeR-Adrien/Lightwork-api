@@ -3,7 +3,7 @@ namespace Kernel\Loggers;
 
 class Logger
 {
-    const DEFAULT_PATH = "logs/";
+    const DEFAULT_PATH = __DIR__ . "/logs/";
 
     const LOG_DEBUG = "DEBUG";
     const LOG_INFO = "INFO";
