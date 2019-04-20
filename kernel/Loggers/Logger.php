@@ -55,7 +55,7 @@ class Logger
                 $begin = "[$date] [$this->level] ";
             }
 
-            file_put_contents($this->path, $begin . $message, FILE_APPEND);
+            file_put_contents($this->path, $begin . $message . "\n", FILE_APPEND);
         } catch (\Exception $e) {
             throw new LogException($e->getMessage(), LogException::ERROR_DURING_PUT_IN_FILE);
         }
