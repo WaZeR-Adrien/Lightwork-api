@@ -206,7 +206,7 @@ class Docs extends Controller
      */
     private static function getDescription()
     {
-        $project = Config::get('project') . ' v' . Config::get('version');
+        $project = Utils::getConfigElement('project') . ' v' . Utils::getConfigElement('version');
         return "Welcome to the documentation of the <b>$project</b>.<br>
         This documentation allow you to understand this RESTful API. To navigate in the documentation, 
         you can use the menu by clicking on the menu icon <i class=\"material-icons tiny\">menu</i> at top left.<br>

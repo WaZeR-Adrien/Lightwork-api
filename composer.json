@@ -1,5 +1,6 @@
 {
-    "name": "Lightwork API",
+    "name": "Lightwork-API",
+    "version": "5.0.1",
     "require": {
         "twig/twig": "2.*",
         "phpmailer/phpmailer": "~6.0",

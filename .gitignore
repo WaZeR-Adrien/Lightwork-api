@@ -1,4 +1,3 @@
 .idea
-vendor
-kernel/Config.php
+vendor/
 kernel/config.yml
