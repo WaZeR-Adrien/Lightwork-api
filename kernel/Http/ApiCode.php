@@ -16,7 +16,7 @@ class ApiCode implements \JsonSerializable
     ];
     const E_A003 = [
         "status" => StatusCode::HTTP_UNAUTHORIZED,
-        "message" => "This page does not exist."
+        "message" => "Incorrect information of connection. The email or the password does not valid."
     ];
     const E_A004 = [
         "status" => StatusCode::HTTP_UNPROCESSABLE_ENTITY,

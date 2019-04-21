@@ -32,6 +32,6 @@ class Auth extends Controller
             return $response->fromApi("S_PO001")->toJson();
         }
 
-        return $response->fromApi("E_A004")->toJson();
+        return $response->fromApi("E_A003")->toJson();
     }
 }
