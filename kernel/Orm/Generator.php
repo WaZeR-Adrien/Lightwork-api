@@ -122,7 +122,7 @@ class Generator
             // Generate constructor
             $constructor = $class->addMethod("__construct")
                 ->addComment("@param int id")
-                ->setBody("\$this->id = \$id;\n");
+                ->setBody("if (null != \$id) { \$this->id = \$id; }\n");
 
             // Add id param to the constructor
             $constructor->addParameter("id", null);

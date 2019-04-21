@@ -27,7 +27,7 @@ class Auth extends Entity
 	 */
 	public function __construct($id = NULL)
 	{
-		$this->id = $id;
+	    if (null != $id) { $this->id = $id; }
 		$this->user = new User();
 	}
 
