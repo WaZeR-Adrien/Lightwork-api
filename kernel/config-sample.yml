@@ -13,9 +13,11 @@ mail:
   password: MAIL_PASSWORD
 
 regex:
-  string: '\w+'
+  alphanum: '[\w\s\-]+'
+  string: '.'
   stringAcc: '[\p{L}\p{Nd}\s-_]+'
   int: '\d+'
+  email: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}'
   boolean: '(true|false)'
   booleanInt: '(1|0)'
   frenchDate: '(0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[0-2])\/\d{4}'

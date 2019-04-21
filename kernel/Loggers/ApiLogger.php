@@ -3,7 +3,7 @@ namespace Kernel\Loggers;
 
 class ApiLogger extends Logger
 {
-    const API_PATH = 'logs/api.csv';
+    const API_PATH = __DIR__ . '/logs/api.csv';
 
     /**
      * ApiLogger constructor.

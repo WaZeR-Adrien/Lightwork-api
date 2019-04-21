@@ -189,6 +189,33 @@ class Utils
     }
 
     /**
+     * Set the regex with the type
+     * @param $type
+     * @return string
+     */
+    public static function setRegex($type)
+    {
+        $regex = [];
+
+        foreach (self::getConfigElement('regex') as $k => $v) {
+            $regex[strtolower($k)] = $v;
+        }
+
+        $type = strtolower($type);
+
+        if ($type != '') {
+            if (key_exists($type, $regex)) {
+                // Return the regex with the type (like String => \w+)
+                return $regex[$type];
+            }
+            // Return directly the regex
+            return $type;
+        }
+        // Return all regex
+        return '.';
+    }
+
+    /**
      * Set the values of existing properties in object ($haystack) with the other object $needle which contain the same keys
      *
      * Example :
@@ -231,9 +258,9 @@ class Utils
     {
         foreach ($needle as $v) {
             if (!property_exists($haystack, $v)) {
-                return ["error" => "E_A005", "key" => $v];
-            } elseif (isset($type[$v]) && !preg_match('/^'. Config::setRegex($type[$v]) .'$/', $haystack->$v) && Config::setRegex($type[$v]) != '.') {
-                return ["error" => "E_A005", "key" => $v];
+                return ["error" => "E_A004", "key" => $v];
+            } elseif (isset($type[$v]) && !preg_match('/^'. self::setRegex($type[$v]) .'$/', $haystack->$v) && self::setRegex($type[$v]) != '.') {
+                return ["error" => "E_A004", "key" => $v];
             }
         }
     }

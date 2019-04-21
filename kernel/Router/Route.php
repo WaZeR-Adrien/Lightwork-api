@@ -249,10 +249,10 @@ class Route
             "type" => []
         ];
 
-        foreach ($this->bodies as $body) {
-            if ($body["required"] || property_exists($data, $body["name"])) {
-                $require["key"][] = $body["name"];
-                $require["type"][$body["name"]] = ucfirst($body["type"]);
+        foreach ($this->bodies as $k => $body) {
+            if ($body["required"] || property_exists($data, $k)) {
+                $require["key"][] = $k;
+                $require["type"][$k] = ucfirst($body["type"]);
             }
         }
         if (isset($data)) {
