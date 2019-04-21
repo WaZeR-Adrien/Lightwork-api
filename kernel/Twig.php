@@ -1,6 +1,8 @@
 <?php
 namespace Kernel;
 
+use Kernel\Tools\Utils;
+
 class Twig
 {
     /**
@@ -51,7 +53,7 @@ class Twig
         $url = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
         $path = substr($url, -4, 4) == 'docs' ? './' : '../';
 
-        $twig->addGlobal('g_api_name', Config::get('project'));
+        $twig->addGlobal('g_api_name', Utils::getConfigElement('project'));
         $twig->addGlobal('g_base_uri', 'http://' . $_SERVER['HTTP_HOST']);
         $twig->addGlobal('g_url', $url);
         $twig->addGlobal('g_postman_collection_id', '3ce1ea80bfce0b207a8b');

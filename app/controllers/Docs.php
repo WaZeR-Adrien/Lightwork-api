@@ -27,7 +27,7 @@ class Docs extends Controller
             ->add(self::getDescription(), "description")
             ->add(self::getHttpRequests(), "httpRequests")
             ->add(self::getApiCodes(), "responseCodes")
-            ->add(Config::get('regex'), "regex")
+            ->add(Utils::getConfigElement('regex'), "regex")
             ->add(self::getRefs($routes), "refs");
 
         return $response->toView('home');
@@ -49,7 +49,7 @@ class Docs extends Controller
             ->add(self::getDescription(), "description")
             ->add(self::getHttpRequests(), "httpRequests")
             ->add(self::getApiCodes(), "responseCodes")
-            ->add(Config::get('regex'), "regex")
+            ->add(Utils::getConfigElement('regex'), "regex")
             ->add(self::getRefs($routes), "refs");
 
         return $response->toView('routes');
@@ -172,7 +172,7 @@ class Docs extends Controller
      */
     private static function getApiCodes()
     {
-        $apiCodes = Config::get('apiCode');
+        $apiCodes = Utils::getConfigElement('apiCode');
 
         $successCodes = [];
         $errorCodes = [];

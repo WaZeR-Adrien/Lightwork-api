@@ -217,9 +217,9 @@ class Route
 
                 // If token is invalid : generator error
                 // If token expire (set date of expiration in Config file) : generate error
-                $expire = Config::get('token')['expire'];
+                $expire = Utils::getConfigElement('token')['expire'];
 
-                if (null == $token || (null != $expire && $token->date + $expire < time())) {
+                if (null == $token || (null != $expire && $token->getDate() + $expire < time())) {
                     $errorToken = true;
                 }
             }

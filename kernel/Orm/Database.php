@@ -372,8 +372,8 @@ Trait Database
 
                 $annotations = Docs::getPhpDoc($this, "get$attr");
 
-                if (isset($annotations["return"])) {
-                    $class = '\Models\\' . $annotations["return"];
+                if (!empty($annotations["return"])) {
+                    $class = '\Models\\' . $annotations["return"]["type"];
                 } else {
                     $class = '\Models\\' . $attr;
                 }
