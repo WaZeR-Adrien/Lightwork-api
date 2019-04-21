@@ -15,6 +15,6 @@ class Error404 extends Controller
      */
     public static function index(Request $request, Response $response)
     {
-        return $response->render("E_A001")->toJson();
+        return $response->fromApi("E_A001")->toJson();
     }
 }

@@ -12,6 +12,6 @@ class ErrorToken extends Controller
      */
     public static function index(Request $request, Response $response)
     {
-        return $response->render("E_A003")->toJson();
+        return $response->fromApi("E_A003")->toJson();
     }
 }
