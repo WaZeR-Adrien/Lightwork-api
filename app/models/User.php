@@ -106,10 +106,10 @@ class User extends Entity
      * Check if email and password correspond
      * @return array|bool
      */
-    public function check()
+    public static function check($email, $password)
     {
-        $user = self::findFirst(['email' => $this->email]);
-        if (password_verify($this->password, $user->password)) {
+        $user = self::findFirst(['email' => $email]);
+        if (password_verify($password, $user->password)) {
             return $user;
         }
         return false;
