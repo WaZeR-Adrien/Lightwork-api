@@ -64,13 +64,15 @@ class Router
      */
     public function run()
     {
-        if (!isset($this->routes[$_SERVER['REQUEST_METHOD']])) {
+        $method = $_SERVER['REQUEST_METHOD'];
+
+        if (!isset($this->routes[$method])) {
             throw new RouterException('REQUEST_METHOD doesn\'t exist');
             die();
         }
 
         try {
-            foreach ($this->routes[$_SERVER['REQUEST_METHOD']] as $route) {
+            foreach ($this->routes[$method] as $route) {
 
                 if ($route->match($this->currentUrl)) {
                     $res = $route->call($this);

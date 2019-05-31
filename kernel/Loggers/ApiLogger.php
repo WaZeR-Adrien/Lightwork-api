@@ -14,15 +14,6 @@ class ApiLogger extends Logger
     }
 
     /**
-     * Save a new log
-     * @throws LogException
-     */
-    public function write($code, $key, $status, $method, $path, $ip)
-    {
-        parent::write("$code, $key, $status, $method, $path, $ip");
-    }
-
-    /**
      * Get all logs
      */
     public function getAll()

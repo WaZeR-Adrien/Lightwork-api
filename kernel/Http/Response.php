@@ -151,15 +151,12 @@ class Response
         // Create new log
         $logger = new ApiLogger();
 
+        // Content
+        $method = (null != $this->route) ? $this->route->getMethod() : $_SERVER['REQUEST_METHOD'];
+        $path = (null != $this->route) ? $this->route->getPath() : $_GET['url'];
+
         // Save in logs
-        $logger->write(
-            $this->apiCode->getCode(),
-            $key,
-            $this->getStatus(),
-            (null != $this->route) ? $this->route->getMethod() : "",
-            (null != $this->route) ? $this->route->getPath() : "",
-            $ip
-        );
+        $logger->write($this->apiCode->getCode() . ",$key," . $this->getStatus() . ",$method,$path,$ip");
     }
 
     /**

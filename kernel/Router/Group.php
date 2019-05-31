@@ -1,6 +1,7 @@
 <?php
 namespace Kernel\Router;
 use Kernel\Config;
+use Kernel\Tools\Utils;
 
 class Group
 {
@@ -67,7 +68,7 @@ class Group
      */
     public function arg($name, $type)
     {
-        $value = Config::setRegex(ucfirst($type));
+        $value = Utils::setRegex(ucfirst($type));
 
         $this->args[$name] = [
             "type" => $type,

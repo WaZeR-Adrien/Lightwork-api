@@ -135,7 +135,7 @@ class Route
         }
 
         // If there are errors with data bodies : generate error
-        $bodies = $this->checkBodies();
+        $bodies = $this->checkBodies( (object) $request->getBody()->getAll() );
         if (!empty($bodies["error"])) {
             return $response->fromApi($bodies["error"], $bodies["key"])->toJson();
         }
@@ -166,11 +166,9 @@ class Route
      */
     private function setRequestData(Request &$request)
     {
-        if (in_array($request->getMethod(), ['PUT', 'PATCH'])) {
-            $request->setBody( Collection::from((array) Utils::parse_http_put()) );
-        } else if ($request->getMethod() === 'POST') {
-            $request->setBody( Collection::from($_POST) );
-        }
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $request->setBody( Collection::from($data) );
 
         $request->setArgs( Collection::from($this->matches) );
 
@@ -234,16 +232,8 @@ class Route
      * Check the require bodies
      * If there are a bodies without value
      */
-    public function checkBodies()
+    public function checkBodies($data)
     {
-        $method = $_SERVER['REQUEST_METHOD'];
-
-        if (in_array($method, ['PUT', 'PATCH'])) {
-            $data = Utils::parse_http_put();
-        } else if ($method === 'POST') {
-            $data = (object) $_POST;
-        }
-
         $require = [
             "key" => [],
             "type" => []
@@ -267,7 +257,7 @@ class Route
      */
     public function arg($name, $type)
     {
-        $value = Config::setRegex(ucfirst($type));
+        $value = Utils::setRegex(ucfirst($type));
 
         $this->args[$name] = [
             "type" => $type,

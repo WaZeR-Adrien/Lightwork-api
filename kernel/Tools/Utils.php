@@ -287,42 +287,4 @@ class Utils
         return (null != $element) ?
             Yaml::parseFile($path)[$element] : Yaml::parseFile($path);
     }
-
-    /**
-     * Parse PUT data for handle
-     * @return object $data (put)
-     */
-    public static function parse_http_put() {
-        $data = new \stdClass();
-        $input = file_get_contents('php://input');
-        preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
-
-        if ($matches) {
-            $boundary = $matches[1];
-            $a_blocks = preg_split("/-+$boundary/", $input);
-            array_pop($a_blocks);
-        } else {
-            parse_str($input, $a_blocks);
-        }
-
-        foreach ($a_blocks as $id => $block) {
-            //if ($block != 0 && empty($block)) { $block = null; }
-
-
-            if (strpos($block, 'application/octet-stream') !== FALSE) {
-                preg_match("/name=\"([^\"]*)\".*stream[\n|\r]+([^\n\r].*)?$/s", $block, $matches);
-            }
-            else {
-                preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)?\r$/s', $block, $matches);
-            }
-
-            if ($matches) {
-                $data->{$matches[1]} = $matches[2];
-            } else {
-                $data->{$id} = $block;
-            }
-        }
-
-        return $data;
-    }
 }
