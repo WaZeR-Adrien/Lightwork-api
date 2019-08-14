@@ -5,6 +5,7 @@ use function Couchbase\basicEncoderV1;
 use Jasny\PhpdocParser\PhpdocParser;
 use Jasny\PhpdocParser\Set\PhpDocumentor;
 use Kernel\Config;
+use Kernel\Http\ApiCode;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
 use Kernel\Tools\Utils;
@@ -95,27 +96,27 @@ class Docs extends Controller
         ];
 
         foreach ($annotations as $k => $v) { $route[$k] = $v; }
-        
+
         foreach ($initialRoute->getProperties() as $k => $v) {
             $propRenammed = implode(array_map('ucfirst', explode('_', $k)));
             $getter = "get$propRenammed";
-            
+
             $route[$k] = $initialRoute->$getter();
         }
 
         if ($initialRoute->getToken() && !array_key_exists("E_A002", $route["codes"])) {
-            $route["codes"]["E_A002"] = Utils::getConfigElement("apiCode")["E_A002"];
+            $route["codes"]["E_A002"] = ApiCode::E_A002;
         }
 
         if (!empty($initialRoute->getBodies())) {
             foreach ($initialRoute->getBodies() as $body) {
                 if ($body["required"] && !array_key_exists("E_A004", $route["codes"])) {
-                    $route["codes"]["E_A004"] = Utils::getConfigElement("apiCode")["E_A004"];
+                    $route["codes"]["E_A004"] = ApiCode::E_A004;
                     break;
                 }
             }
         }
-        
+
         return $route;
     }
 
@@ -172,7 +173,8 @@ class Docs extends Controller
      */
     private static function getApiCodes()
     {
-        $apiCodes = Utils::getConfigElement('apiCode');
+        $class = new \ReflectionClass(ApiCode::class);
+        $apiCodes = $class->getConstants();
 
         $successCodes = [];
         $errorCodes = [];
@@ -243,7 +245,7 @@ class Docs extends Controller
             $codes = [];
 
             foreach ($annotations["codes"] as $code) {
-                $codes[$code] = Utils::getConfigElement("apiCode")[$code];
+                $codes[$code] = constant("\Kernel\Http\ApiCode::$code");
             }
 
             $annotations["codes"] = $codes;
