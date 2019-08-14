@@ -1,13 +1,11 @@
-# Lightwork API [v5.1.0]
+# Lightwork API [v6.0.0]
 Lightwork API is a light **PHP framework** object oriented with many features in MVC.
 
-> The documentation for the version 5 is coming soon
+> The documentation for the version 6 is coming soon
 > The actual documentation is not good (please wait)
 
-### v5 to v5.1
-- The body of the request is sent in JSON now instead of form-urlencoded
-- ApiLogger write the method and path in 404 error
-- Fix issue with the call of setRegex()
+### v5 to v6
+IN DEV
 
 ## Installation :
 - Clone the repository
