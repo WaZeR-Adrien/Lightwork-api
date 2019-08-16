@@ -1,11 +1,11 @@
 <?php
-namespace Kernel\Orm;
+namespace Kernel;
 
 use Kernel\Tools\Utils;
 use Nette\PhpGenerator\Parameter;
 use Nette\PhpGenerator\PhpNamespace;
 
-class Generator
+class CLI
 {
     public static function run()
     {
