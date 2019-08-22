@@ -38,6 +38,9 @@ class CLI
         return $res != null ? $res : $default;
     }
 
+    /**
+     * Start the configuration
+     */
     public static function start()
     {
         echo Color::colorString("Welcome to the CLI of the Lightwork-API v6.0.0\n", Color::BOLD);
