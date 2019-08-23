@@ -22,12 +22,12 @@ class CLI
     }
 
     /**
-     * @param $message
-     * @param null $default
+     * @param string $message
+     * @param string|null $default
      * @param bool $require
      * @return string|null
      */
-    private static function prompt($message, $default = null, $require = false)
+    private static function prompt(string $message, string $default = null, bool $require = false): ?string
     {
         $res = readline($message);
 
@@ -41,7 +41,7 @@ class CLI
     /**
      * Start the configuration
      */
-    public static function start()
+    public static function start(): void
     {
         echo Color::colorString("Welcome to the CLI of the Lightwork-API v6.0.0\n", Color::BOLD);
 
@@ -109,7 +109,7 @@ class CLI
     /**
      * Generate Entities
      */
-    public static function generateEntities()
+    public static function generateEntities(): void
     {
         echo "Configuration of your models (identically to your tables)...\n";
         echo "Fetch tables...\n";
@@ -223,7 +223,7 @@ class CLI
             echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $className model\n";
 
             // Generate DAO
-            self::generateDao($className . "DAO");
+            self::generateDao($className . "DAO", $table);
 
             // End
             echo str_repeat("=", strlen($line) - 12) . "\n\n";
@@ -232,9 +232,10 @@ class CLI
 
     /**
      * Generate DAO
-     * @param $className
+     * @param string $className
+     * @param string $table
      */
-    private static function generateDao($className)
+    private static function generateDao(string $className, string $table): void
     {
         // Config of the class
         $namespace = new PhpNamespace("Models\Dao");
@@ -244,7 +245,8 @@ class CLI
         // Annotations class
         $class->addComment("Class $className")
             ->addComment("@package Models\Dao")
-            ->addComment("@model " . substr($className, 0, -3));
+            ->addComment("@model " . substr($className, 0, -3))
+            ->addComment("@table " . $table);
 
         $content = "<?php\n\n" . $namespace;
 
@@ -272,10 +274,10 @@ class CLI
 
     /**
      * Get the type of the field
-     * @param $columnType
+     * @param string $columnType
      * @return string
      */
-    private static function getTypeField($columnType)
+    private static function getTypeField(string $columnType): string
     {
         // Get type of the field
         switch (true) {
