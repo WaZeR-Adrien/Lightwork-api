@@ -11,7 +11,7 @@ class Connection
     /**
      * @throws OrmException
      */
-    private static function init()
+    private static function initializePdo()
     {
         try {
             $db = Utils::getConfigElement('database');
@@ -36,9 +36,9 @@ class Connection
     /**
      * @return \PDO
      */
-    public static function getPdo()
+    public static function getInstance()
     {
-        if (null == self::$pdo) { self::init(); };
+        if (null == self::$pdo) { self::initializePdo(); };
 
         return self::$pdo;
     }
