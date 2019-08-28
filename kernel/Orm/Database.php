@@ -9,9 +9,22 @@ use Kernel\Tools\Collection\Collection;
 use Kernel\Tools\Utils;
 use Models\Entity;
 use Models\User;
+use phpDocumentor\Reflection\Types\Integer;
+use phpDocumentor\Reflection\Types\Mixed_;
 
-Trait Database
+trait Database
 {
+    /**
+     * Get the model name with the namespace
+     * @return string
+     * @throws \ReflectionException
+     */
+    private function getModel()
+    {
+        $doc = Docs::getPhpDoc(get_called_class());
+        return "Models\\" . $doc["model"];
+    }
+
     /**
      * Get table which called.
      * @return string
