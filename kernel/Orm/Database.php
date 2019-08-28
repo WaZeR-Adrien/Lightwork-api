@@ -47,10 +47,10 @@ trait Database
 
     /**
      * Get fields by table name
-     * @param null $table
-     * @return array
+     * @param string|null $table
+     * @return Collection
      */
-    public static function getColumns($table = null)
+    public static function getColumns(string $table = null)
     {
         if (null == $table) {
             $table = self::getTable();
@@ -59,9 +59,9 @@ trait Database
         $stmt = 'SHOW COLUMNS FROM `' . $table . '`';
 
         try {
-            $q = Connection::getPdo()->prepare($stmt);
+            $q = Connection::getInstance()->prepare($stmt);
             $q->execute();
-            return $q->fetchAll(\PDO::FETCH_ASSOC);
+            return Collection::from( $q->fetchAll(\PDO::FETCH_ASSOC) );
 
         } catch (\Exception $e) {
             die($e->getMessage());
@@ -70,14 +70,14 @@ trait Database
 
     /**
      * Get table
-     * @return mixed
+     * @return Collection
      */
     public static function getTables()
     {
         try {
-            $q = Connection::getPdo()->prepare("SHOW TABLES");
+            $q = Connection::getInstance()->prepare("SHOW TABLES");
             $q->execute();
-            return $q->fetchAll(\PDO::FETCH_ASSOC);
+            return Collection::from( $q->fetchAll(\PDO::FETCH_ASSOC) );
 
         } catch (\Exception $e) {
             die($e->getMessage());
@@ -86,7 +86,7 @@ trait Database
 
     /**
      * Get value of another table with the name of the 'class_id'
-     * @param $name : class
+     * @param string $name : class
      * @return object
      */
     public function __get($name)
@@ -104,13 +104,14 @@ trait Database
 
     /**
      * Get values with SELECT query and clause WHERE
-     * @param $where
+     * @param string $where
      * @param array $params
-     * @param null $order
-     * @param null $limit
+     * @param string|null $order
+     * @param string|null $limit
      * @return Collection
+     * @throws \ReflectionException
      */
-    public static function where($where, $params = [], $order = null, $limit = null)
+    public static function where(string $where, array $params = [], string $order = null, string $limit = null)
     {
         $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::order($order) . self::limit($limit);
         return self::query($query, $params);
@@ -118,34 +119,34 @@ trait Database
 
     /**
      * Get first row with SELECT query and clause WHERE
-     * @param $where
-     * @param $params
-     * @return self
+     * @param string $where
+     * @param array $params
+     * @return object
      */
-    public static function whereFirst($where, $params)
+    public static function whereFirst(string $where, array $params)
     {
         return self::where($where, $params)->getFirst();
     }
 
     /**
      * Get last row with SELECT query and clause WHERE
-     * @param $where
-     * @param $params
-     * @return self
+     * @param string $where
+     * @param array $params
+     * @return object
      */
-    public static function whereLast($where, $params)
+    public static function whereLast(string $where, array $params)
     {
         return self::where($where, $params)->getLast();
     }
 
     /**
      * Get values by params
-     * @param $params
-     * @param null $order
-     * @param null $limit
+     * @param array $params
+     * @param string|null $order
+     * @param string|null $limit
      * @return Collection
      */
-    public static function find($params, $order = null, $limit = null)
+    public static function find(array $params, string $order = null, string $limit = null)
     {
         $where = [];
         $p = [];
@@ -159,28 +160,28 @@ trait Database
 
     /**
      * Get first row by params
-     * @param $params
-     * @return self
+     * @param array $params
+     * @return object
      */
-    public static function findFirst($params)
+    public static function findFirst(array $params)
     {
         return self::find($params)->getFirst();
     }
 
     /**
      * Get last row by params
-     * @param $params
-     * @return self
+     * @param array $params
+     * @return object
      */
-    public static function findLast($params)
+    public static function findLast(array $params)
     {
         return self::find($params)->getLast();
     }
 
     /**
      * Get first row by id
-     * @param $id
-     * @return self
+     * @param string|int $id
+     * @return object
      */
     public static function getById($id)
     {
@@ -189,18 +190,18 @@ trait Database
 
     /**
      * Get all data from table
-     * @param null $order
-     * @param null $limit
+     * @param string|null $order
+     * @param string|null $limit
      * @return Collection
      */
-    public static function getAll($order = null, $limit = null)
+    public static function getAll(string $order = null, string $limit = null)
     {
         return self::query('SELECT * FROM '. self::getTable() . self::order($order) . self::limit($limit));
     }
 
     /**
      * Get the first row
-     * @return self
+     * @return object
      */
     public static function getFirst()
     {
@@ -209,7 +210,7 @@ trait Database
 
     /**
      * Get the last row
-     * @return self
+     * @return object
      */
     public static function getLast()
     {
@@ -218,30 +219,30 @@ trait Database
 
     /**
      * Set string ORDER BY...
-     * @param $order
+     * @param string $order
      * @return string
      */
-    private static function order($order)
+    private static function order(?string $order)
     {
         return (null !== $order) ? (' ORDER BY ' . $order) : '';
     }
 
     /**
      * Set string LIMIT...
-     * @param $limit
+     * @param string $limit
      * @return string
      */
-    private static function limit($limit)
+    private static function limit(?string $limit)
     {
         return (null !== $limit) ? (' LIMIT ' . $limit) : '';
     }
 
     /**
-     * @param string $where
+     * @param string|null $where
      * @param array $params
      * @return int
      */
-    public static function count($where = null, $params = [])
+    public static function count(string $where = null, array $params = [])
     {
         if (null !== $where) { $where = ' WHERE '. $where; }
         else { $where = ''; }
@@ -252,17 +253,15 @@ trait Database
             ->where($where);
         return (int) self::query($query->getStatement(), $params)[0]->nb;*/
 
-        return (int) self::query(
-            'SELECT count(*) as nb FROM '. self::getTable() . $where,
-            $params
-        )->getFirst()->nb;
+        return (int) self::query('SELECT count(*) as nb FROM '. self::getTable() . $where, $params)
+            ->getFirst()->nb;
     }
 
     /**
      * Store the data in database
      * If the data has an ID, the function update the data
      * Else the function insert the data
-     * @return int
+     * @return int|object
      */
     public function store()
     {
@@ -271,10 +270,11 @@ trait Database
 
     /**
      * Get the key and the value with the getter
-     * @param $key
-     * @return array|bool
+     * @param array $keys
+     * @param array $values
+     * @return object
      */
-    private function setKeysAndValues(&$keys = [], &$values = [])
+    private function setKeysAndValues(array &$keys = [], array &$values = [])
     {
         $reflect = new \ReflectionObject($this);
 
@@ -299,7 +299,7 @@ trait Database
 
     /**
      * Insert new values
-     * @return self
+     * @return object
      */
     private function insert()
     {
@@ -342,9 +342,10 @@ trait Database
 
     /**
      * Delete row from database
-     * @return mixed
+     * @return int
      */
-    public function delete() {
+    public function delete()
+    {
         $params = [];
         $values = [];
         if (empty($this->getId())) {
@@ -366,51 +367,26 @@ trait Database
     }
 
     /**
+     * Get the last id inserted
      * @return int
      */
     public static function getLastId()
     {
-        return Connection::getPdo()->lastInsertId();
+        return Connection::getInstance()->lastInsertId();
     }
 
     /**
-     * Convert all foreign key to object
-     */
-    private function foreignKeyToObject()
-    {
-        foreach ($this as $k => $v) {
-            if (strpos($k, '_id')) {
-                $attr = substr($k, 0, strlen($k) - 3);
-                $attr = Utils::toPascalCase($attr);
-
-                $annotations = Docs::getPhpDoc($this, "get$attr");
-
-                if (!empty($annotations["return"])) {
-                    $class = '\Models\\' . $annotations["return"]["type"];
-                } else {
-                    $class = '\Models\\' . $attr;
-                }
-
-                $class = new $class($v);
-
-                $setter = "set$attr";
-                $this->$setter($class);
-
-                unset($this->$k);
-            }
-        }
-    }
-
-    /**
-     * @param $statement string
-     * @param $params array
+     * Execute query
+     * @param string $statement
+     * @param array|null $params
      * @return Collection
+     * @throws \ReflectionException
      */
-    public static function query($statement, $params = null)
+    public static function query(string $statement, array $params = null)
     {
-        $q = Connection::getPdo()->prepare($statement);
+        $q = Connection::getInstance()->prepare($statement);
         $q->execute($params);
-        $res = $q->fetchAll(\PDO::FETCH_CLASS, get_called_class());
+        $res = $q->fetchAll(\PDO::FETCH_CLASS, self::getModel());
 
         foreach ($res as $item) {
             $item->foreignKeyToObject();
@@ -420,13 +396,13 @@ trait Database
     }
 
     /**
-     * @param $statement string
-     * @param $params array
+     * @param string $statement
+     * @param array $params
      * @return int
      */
-    public static function exec($statement, $params)
+    public static function exec(string $statement, array $params)
     {
-        $q = Connection::getPdo()->prepare($statement);
+        $q = Connection::getInstance()->prepare($statement);
         return $q->execute($params);
     }
 }
