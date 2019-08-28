@@ -10,13 +10,15 @@
         "jasny/phpdoc-parser": "dev-master"
     },
     "require-dev": {
-        "phpunit/phpunit": "~8.1"
+        "phpunit/phpunit": "~8.1",
+        "crashuxx/phockito": "1.0.0"
     },
     "autoload": {
         "psr-4": {
             "Controllers\\": "app/controllers",
             "Models\\": "app/models",
-            "Kernel\\": "kernel"
+            "Kernel\\": "kernel",
+            "Tests\\": "tests"
         }
     },
     "scripts": {
