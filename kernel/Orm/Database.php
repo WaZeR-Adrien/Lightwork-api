@@ -85,24 +85,6 @@ trait Database
     }
 
     /**
-     * Get value of another table with the name of the 'class_id'
-     * @param string $name : class
-     * @return object
-     */
-    public function __get($name)
-    {
-        if ($name == 'id') { return null; }
-
-        $fullName = explode('\\', $name);
-        $field = end($fullName) . '_id';
-        $fullName = array_map(function ($v){ return ucfirst($v); }, $fullName);
-        $class = ucfirst(implode('\\', $fullName));
-        $class = 'Models\\' .$class;
-
-        return new $class($this->$field);
-    }
-
-    /**
      * Get values with SELECT query and clause WHERE
      * @param string $where
      * @param array $params
