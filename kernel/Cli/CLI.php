@@ -4,8 +4,10 @@ namespace Kernel\Cli;
 
 use Kernel\Orm\Database;
 use Kernel\Tools\Utils;
+use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Parameter;
 use Nette\PhpGenerator\PhpNamespace;
+use function PHPSTORM_META\override;
 
 class CLI
 {
@@ -112,9 +114,11 @@ class CLI
     public static function generateEntities(): void
     {
         echo "Configuration of your models (identically to your tables)...\n";
+        echo Color::colorString("Do you want generate DAO with the models ?", Color::BOLD);
+        $generateDao = self::prompt(" [y/n]", null, true);
         echo "Fetch tables...\n";
 
-        $tables = Database::getTables();
+        $tables = Database::getTables()->getAll();
         echo Color::colorString("FETCH", Color::FOREGROUND_BOLD_GREEN) . " tables\n";
 
         $numOfTables = count($tables);
@@ -149,7 +153,7 @@ class CLI
             $constructor->addParameter("id", null);
 
             // Generate attributes, setters and getters
-            foreach (Database::getColumns($table) as $column) {
+            foreach (Database::getColumns($table)->getAll() as $column) {
                 $field = $column["Field"];
 
                 // Create attribute
@@ -223,7 +227,9 @@ class CLI
             echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $className model\n";
 
             // Generate DAO
-            self::generateDao($className . "DAO", $table);
+            if (strtolower($generateDao) == "y") {
+                self::generateDao($className . "DAO", $className, $table);
+            }
 
             // End
             echo str_repeat("=", strlen($line) - 12) . "\n\n";
@@ -235,18 +241,43 @@ class CLI
      * @param string $className
      * @param string $table
      */
-    private static function generateDao(string $className, string $table): void
+    private static function generateDao(string $dao, string $model,string $table): void
     {
         // Config of the class
         $namespace = new PhpNamespace("Models\Dao");
-        $class = $namespace->addClass($className);
+        $class = $namespace->addClass($dao);
         $class->addExtend("\Models\Dao\Dao");
 
         // Annotations class
-        $class->addComment("Class $className")
+        $class->addComment("Class $dao")
             ->addComment("@package Models\Dao")
-            ->addComment("@model " . substr($className, 0, -3))
-            ->addComment("@table " . $table);
+            ->addComment("@model $model")
+            ->addComment("@table $table");
+
+        foreach (ClassType::from(Database::class)->getMethods() as $method) {
+            if ($method->getVisibility() == "public" && in_array($method->getName(),
+                    ["whereFirst", "whereLast", "findFirst", "findLast", "getById", "getFirst", "getLast"])) {
+
+                // TODO : remove les :self dans Database et pour détecter quel method override, faire un in_array($method->getName(), ["whereFirst", "whereLast"...]
+                $newMethod = $class->addMethod($method->getName())
+                    ->addComment("Override of " . $method->getName() . "() to indicate the real return type")
+                    ->addComment("@return \Models\\$model")
+                    ->setVisibility("public")
+                    ->setStatic($method->isStatic())
+                    ->setParameters($method->getParameters());
+
+                $parameters = implode(", ", array_map(function (Parameter $parameter) {
+                    return "$" . $parameter->getName();
+                }, $method->getParameters()));
+
+                foreach ($method->getParameters() as $parameter) {
+                    $newMethod->addParameter($parameter->getName())
+                        ->setTypeHint($parameter->getTypeHint());
+                }
+
+                $newMethod->setBody("return parent::" . $method->getName() . "($parameters);");
+            }
+        }
 
         $content = "<?php\n\n" . $namespace;
 
@@ -257,7 +288,7 @@ class CLI
         $rootDir = realpath($dir . '/../..');
 
         // Get the path of the file to create
-        $path = "$rootDir/app/models/Dao/$className.php";
+        $path = "$rootDir/app/models/Dao/$dao.php";
 
         // Open/Create the file
         $file = fopen($path, "w");
@@ -269,7 +300,7 @@ class CLI
         fclose($file);
 
         // End
-        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $className dao\n";
+        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $dao dao\n";
     }
 
     /**
