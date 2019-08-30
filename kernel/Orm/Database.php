@@ -11,6 +11,7 @@ use Models\Entity;
 use Models\User;
 use phpDocumentor\Reflection\Types\Integer;
 use phpDocumentor\Reflection\Types\Mixed_;
+use phpDocumentor\Reflection\Types\Self_;
 
 trait Database
 {
@@ -19,7 +20,7 @@ trait Database
      * @return string
      * @throws \ReflectionException
      */
-    private function getModel()
+    private static function getModel()
     {
         $doc = Docs::getPhpDoc(get_called_class());
         return "Models\\" . $doc["model"];
@@ -245,9 +246,14 @@ trait Database
      * Else the function insert the data
      * @return int|object
      */
-    public function store()
+    public static function store($obj)
     {
-        return (null != $this->getId()) ? $this->update() : $this->insert();
+        $class = self::getModel();
+        if ($obj instanceof $class) {
+            return (null != $obj->getId()) ? self::update($obj) : self::insert($obj);
+        } else {
+            throw new OrmException("Argument passed must be an instance of $class, instance of ". get_class($obj) ." given.");
+        }
     }
 
     /**
@@ -256,9 +262,9 @@ trait Database
      * @param array $values
      * @return object
      */
-    private function setKeysAndValues(array &$keys = [], array &$values = [])
+    private static function setKeysAndValues(object $obj, ?array &$keys = [], ?array &$values = [])
     {
-        $reflect = new \ReflectionObject($this);
+        $reflect = new \ReflectionObject($obj);
 
         foreach ($reflect->getProperties() as $property) {
             if (!$property->isStatic()) {
@@ -266,14 +272,14 @@ trait Database
                 $propertyName = $property->getName();
                 $getter = "get" . Utils::toPascalCase($propertyName);
 
-                if (is_object($this->$getter())) {
-                    if (method_exists($this->$getter(), "getId")) {
+                if (is_object($obj->$getter())) {
+                    if (method_exists($obj->$getter(), "getId")) {
                         $keys[] = '`' . $propertyName . '_id`';
-                        $values[] = $this->$getter()->getId();
+                        $values[] = $obj->$getter()->getId();
                     }
                 } else {
                     $keys[] = '`' . $propertyName . '`';
-                    $values[] = $this->$getter();
+                    $values[] = $obj->$getter();
                 }
             }
         }
@@ -283,9 +289,9 @@ trait Database
      * Insert new values
      * @return object
      */
-    private function insert()
+    private static function insert(object $obj)
     {
-        $this->setKeysAndValues($keys, $values);
+        self::setKeysAndValues($obj, $keys, $values);
 
         $keys = implode(',', $keys);
 
@@ -295,9 +301,9 @@ trait Database
         );
 
         if ($q) {
-            $this->setId(self::getLastId());
+            $obj->setId(self::getLastId());
 
-            return $this;
+            return $obj;
         }
 
         return false;
@@ -308,11 +314,12 @@ trait Database
      * Values and key with $this
      * @return int
      */
-    private function update()
+    private static function update($obj)
     {
-        $this->setKeysAndValues($keys, $values);
+        // TODO : tester l'override pour le typage du $obj
+        self::setKeysAndValues($obj, $keys, $values);
 
-        $values[] = $this->getId();
+        $values[] = $obj->getId();
 
         $keys = implode(' = ?, ', $keys);
 
@@ -326,26 +333,26 @@ trait Database
      * Delete row from database
      * @return int
      */
-    public function delete()
+    public static function delete(object $obj)
     {
         $params = [];
         $values = [];
-        if (empty($this->getId())) {
-            foreach ($this as $k => $v) {
+        if (empty($obj->getId())) {
+            foreach ($obj as $k => $v) {
 
                 $getter = "get" . Utils::toPascalCase($k);
 
-                if (null != $this->$getter()) {
+                if (null != $obj->$getter()) {
                     $params[] = $k;
-                    $values[] = $this->$getter();
+                    $values[] = $obj->$getter();
                 }
             }
         } else {
             $params = ['id'];
-            $values[] = $this->getId();
+            $values[] = $obj->getId();
         }
 
-        return $this->exec('DELETE FROM ' . self::getTable() . ' WHERE ' . implode(' = ? AND ', $params) . ' = ?', $values);
+        return self::exec('DELETE FROM ' . self::getTable() . ' WHERE ' . implode(' = ? AND ', $params) . ' = ?', $values);
     }
 
     /**
