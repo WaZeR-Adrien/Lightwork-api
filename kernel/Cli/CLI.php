@@ -115,7 +115,7 @@ class CLI
     {
         echo "Configuration of your models (identically to your tables)...\n";
         echo Color::colorString("Do you want generate DAO with the models ?", Color::BOLD);
-        $generateDao = self::prompt(" [y/n]", null, true);
+        $generateDao = self::prompt(" [y/n] : ", null, true);
         echo "Fetch tables...\n";
 
         $tables = Database::getTables()->getAll();
@@ -192,6 +192,8 @@ class CLI
                 $param = new Parameter($field);
                 if (strtolower($type) == $field) {
                     $param->setTypeHint("\\Models\\$type");
+                } else {
+                    $param->setTypeHint("$type");
                 }
 
                 $class->addMethod("set$methodName")
@@ -246,7 +248,8 @@ class CLI
         // Config of the class
         $namespace = new PhpNamespace("Models\Dao");
         $class = $namespace->addClass($dao);
-        $class->addExtend("\Models\Dao\Dao");
+        $class->addExtend("\Models\Dao\Dao")
+            ->setAbstract();
 
         // Annotations class
         $class->addComment("Class $dao")
@@ -254,26 +257,36 @@ class CLI
             ->addComment("@model $model")
             ->addComment("@table $table");
 
+        // Override some methods
         foreach (ClassType::from(Database::class)->getMethods() as $method) {
             if ($method->getVisibility() == "public" && in_array($method->getName(),
-                    ["whereFirst", "whereLast", "findFirst", "findLast", "getById", "getFirst", "getLast"])) {
+                    ["whereFirst", "whereLast", "findFirst", "findLast", "getById", "getFirst", "getLast", "store"])) {
 
-                // TODO : remove les :self dans Database et pour détecter quel method override, faire un in_array($method->getName(), ["whereFirst", "whereLast"...]
                 $newMethod = $class->addMethod($method->getName())
-                    ->addComment("Override of " . $method->getName() . "() to indicate the real return type")
-                    ->addComment("@return \Models\\$model")
                     ->setVisibility("public")
                     ->setStatic($method->isStatic())
-                    ->setParameters($method->getParameters());
+                    ->setParameters($method->getParameters())
+                    ->addComment("Override of " . $method->getName() . "() to indicate the real return type");
 
+                // parameters
+                if ($method->getName() == "store") {
+                    $newMethod->addComment("@param \Models\\$model \$obj")
+                        ->addComment("@return int|\Models\\$model");
+
+                    $newMethod->addParameter("obj");
+                } else {
+                    $newMethod->addComment("@return \Models\\$model");
+
+                    foreach ($method->getParameters() as $parameter) {
+                        $newMethod->addParameter($parameter->getName())
+                            ->setTypeHint($parameter->getTypeHint());
+                    }
+                }
+
+                // body of method
                 $parameters = implode(", ", array_map(function (Parameter $parameter) {
                     return "$" . $parameter->getName();
                 }, $method->getParameters()));
-
-                foreach ($method->getParameters() as $parameter) {
-                    $newMethod->addParameter($parameter->getName())
-                        ->setTypeHint($parameter->getTypeHint());
-                }
 
                 $newMethod->setBody("return parent::" . $method->getName() . "($parameters);");
             }
