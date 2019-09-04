@@ -142,7 +142,13 @@ class CLI
             // Annotations class
             $class->addComment("Class $className")
                 ->addComment("@package Models")
+                ->addComment("@dao " . $className . "DAO")
                 ->addComment("@table $table");
+
+            // Target DAO
+            $class->addProperty("dao", $className . "DAO")
+                ->addComment("Data Access Object")
+                ->addComment("@var string");
 
             // Generate constructor
             $constructor = $class->addMethod("__construct")
@@ -151,6 +157,10 @@ class CLI
 
             // Add id param to the constructor
             $constructor->addParameter("id", null);
+
+            // Foreign keys
+            $schemas = [];
+            $foreignKeys = Database::getForeignKeys($table);
 
             // Generate attributes, setters and getters
             foreach (Database::getColumns($table)->getAll() as $column) {
@@ -169,6 +179,14 @@ class CLI
                     echo "=> " . Color::colorString("ACTION REQUIRED ", Color::FOREGROUND_BOLD_RED) .
                         "$foreignKey target the model " . Color::colorString($type, Color::BOLD);
                     $type = Utils::toPascalCase( self::prompt(" [Press enter or correct the target] : ", $type) );
+
+                    // Push schema
+                    $schemas[$field] = [
+                        "model" => $type,
+                        "table" => $foreignKeys->filter(function ($fk) use ($column) {
+                            return $fk["COLUMN_NAME"] == $column["Field"];
+                        })->getFirst()["REFERENCED_TABLE_NAME"]
+                    ];
 
                     // Add the new Object to the constructor
                     $constructor->setBody($constructor->getBody() . "\$this->$field = new $type();\n");
@@ -205,6 +223,11 @@ class CLI
                 echo "=> " . Color::colorString("ADD", Color::FOREGROUND_BOLD_GREEN) .
                     " $field(" . Color::colorString($type, Color::BOLD) . ") field\n";
             }
+
+            // Add list of schemas
+            $class->addProperty("schemas", $schemas)
+                ->addComment("Schema of foreign keys")
+                ->addComment("@var array");
 
             $content = "<?php\n\n" . $namespace;
 
@@ -256,6 +279,11 @@ class CLI
             ->addComment("@package Models\Dao")
             ->addComment("@model $model")
             ->addComment("@table $table");
+
+        // Target DAO
+        $class->addProperty("model", $model)
+            ->addComment("Model")
+            ->addComment("@var string");
 
         // Override some methods
         foreach (ClassType::from(Database::class)->getMethods() as $method) {
