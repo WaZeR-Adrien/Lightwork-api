@@ -147,6 +147,7 @@ class CLI
 
             // Target DAO
             $class->addProperty("dao", $className . "DAO")
+                ->setStatic()
                 ->addComment("Data Access Object")
                 ->addComment("@var string");
 
@@ -226,8 +227,14 @@ class CLI
 
             // Add list of schemas
             $class->addProperty("schemas", $schemas)
+                ->setStatic()
                 ->addComment("Schema of foreign keys")
                 ->addComment("@var array");
+
+            $class->addMethod("getSchemas")
+                ->setStatic()
+                ->setBody("return \Kernel\\Tools\\Collection\\Collection::from( self::\$schemas );")
+                ->addComment("@return \Kernel\\Tools\\Collection\\Collection");
 
             $content = "<?php\n\n" . $namespace;
 
@@ -282,6 +289,7 @@ class CLI
 
         // Target DAO
         $class->addProperty("model", $model)
+            ->setStatic()
             ->addComment("Model")
             ->addComment("@var string");
 
