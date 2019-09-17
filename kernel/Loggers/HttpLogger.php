@@ -1,26 +1,32 @@
 <?php
 namespace Kernel\Loggers;
+use AdrienM\Logger\LogException;
+use AdrienM\Logger\Logger;
 
-class ApiLogger extends Logger
+class HttpLogger extends Logger
 {
-    const API_PATH = __DIR__ . '/logs/api.csv';
 
     /**
-     * ApiLogger constructor.
+     * @param string|null $path
+     * @param string $level
+     * @return HttpLogger
      */
-    public function __construct($level = parent::LOG_ERROR)
+    public static function getInstance(string $path = null, string $level = self::LOG_DEBUG): Logger
     {
-        parent::__construct(self::API_PATH, $level);
+        if (null == $path) {
+            $path = dirname(__DIR__, 2) . "/logs/";
+        }
+
+        return new self($path, "http.csv", $level);
     }
 
     /**
      * Get all logs
+     * @return array
      */
-    public function getAll()
+    public function getAll(): array
     {
-        $logs = self::parse();
-
-        return $logs;
+        return self::parse();
     }
 
     /**
@@ -82,7 +88,7 @@ class ApiLogger extends Logger
     {
         try {
             $index = [];
-            $file = fopen($this->path, 'r');
+            $file = fopen($this->path . "/" . $this->filename, 'r');
 
             // first line
             $firstLine = fgetcsv($file);
