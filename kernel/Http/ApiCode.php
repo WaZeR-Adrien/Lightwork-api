@@ -1,7 +1,7 @@
 <?php
 namespace Kernel\Http;
 
-use Kernel\Loggers\Logger;
+use AdrienM\Logger\Logger;
 
 class ApiCode implements \JsonSerializable
 {

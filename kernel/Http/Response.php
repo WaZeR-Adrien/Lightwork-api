@@ -2,7 +2,7 @@
 namespace Kernel\Http;
 
 use GreenCape\Xml\Converter;
-use Kernel\Loggers\ApiLogger;
+use Kernel\Loggers\HttpLogger;
 use Kernel\Router\Route;
 use Kernel\Tools\Collection\Collection;
 use Kernel\Twig;
@@ -149,7 +149,7 @@ class Response
         $ip = $_SERVER['REMOTE_ADDR'];
 
         // Create new log
-        $logger = new ApiLogger();
+        $logger = HttpLogger::getInstance();
 
         // Content
         $method = (null != $this->route) ? $this->route->getMethod() : $_SERVER['REQUEST_METHOD'];
