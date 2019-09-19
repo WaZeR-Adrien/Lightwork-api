@@ -8,7 +8,6 @@ use Kernel\Tools\Utils;
 use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Parameter;
 use Nette\PhpGenerator\PhpNamespace;
-use function PHPSTORM_META\override;
 
 class CLI
 {
@@ -87,9 +86,9 @@ class CLI
         $path = realpath($dir . "/..");
 
         // Open the file
-        $file = fopen("$path/config.yml", "w");
+        $file = fopen("$path/config.json", "w");
 
-        $contentFile = file_get_contents("$path/config-sample.yml");
+        $contentFile = file_get_contents("$path/config-sample.json");
 
         foreach ($config as $type => $array) {
 
@@ -106,7 +105,7 @@ class CLI
 
         // Close and save the file
         fclose($file);
-        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $path/config.yml\n";
+        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $path/config.json\n";
     }
 
     /**

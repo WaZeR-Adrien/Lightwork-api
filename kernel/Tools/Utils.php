@@ -276,15 +276,15 @@ class Utils
     }
 
     /**
-     * Allow to get element(s) of the config.yml
+     * Allow to get element(s) of the config.json
      * @param null $element
      * @return mixed
      */
     public static function getConfigElement($element = null)
     {
-        $path = dirname(__DIR__) . "/config.yml";
+        $path = file_get_contents(dirname(__DIR__) . "/config.json");
 
         return (null != $element) ?
-            Yaml::parseFile($path)[$element] : Yaml::parseFile($path);
+            json_decode($path)->$element : json_decode($path);
     }
 }
