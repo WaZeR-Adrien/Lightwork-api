@@ -1,48 +1,36 @@
 <?php
 namespace Kernel\Orm;
-use Controllers\Controller;
-use Controllers\Docs;
-use Jasny\PhpdocParser\PhpdocParser;
-use Jasny\PhpdocParser\Set\PhpDocumentor;
-use Jasny\PhpdocParser\Tag\DescriptionTag;
-use Kernel\Tools\Collection\Collection;
+use AdrienM\Collection\Collection;
 use Kernel\Tools\Utils;
-use Models\Entity;
-use Models\User;
-use phpDocumentor\Reflection\Types\Integer;
-use phpDocumentor\Reflection\Types\Mixed_;
-use phpDocumentor\Reflection\Types\Self_;
+use phpDocumentor\Reflection\DocBlock\Tags\Return_;
 
 trait Database
 {
     /**
      * Get the model name with the namespace
      * @return string
-     * @throws \ReflectionException
      */
-    private static function getModel()
+    public static function getModel(): string
     {
-        $doc = Docs::getPhpDoc(get_called_class());
-        return "Models\\" . $doc["model"];
+        if (isset(static::$model)) {
+            return "Models\\" . static::$model;
+        } else {
+            $classExploded = explode('\\', static::class);
+            return "Models\\" . substr($classExploded[count($classExploded) - 1], 0, -3);
+        }
     }
 
     /**
      * Get table which called.
      * @return string
      */
-    public static function getTable()
+    public static function getTable(): string
     {
-        $class = get_called_class();
-
-        $doc = (new \ReflectionClass($class))->getDocComment();
-
-        if (strpos($doc, "@table")) {
-            $table = substr($doc, strpos($doc, "@table") + 6);
-            $table = explode(" ", $table)[1];
-
-            return trim($table);
+        if (isset(static::$table)) {
+            return static::$table;
         } else {
-            return strtolower(explode('\\', $class)[1]);
+            $classExploded = explode('\\', static::class);
+            return strtolower( substr($classExploded[count($classExploded) - 1], 0, -3) );
         }
     }
 
@@ -51,7 +39,7 @@ trait Database
      * @param string|null $table
      * @return Collection
      */
-    public static function getColumns(string $table = null)
+    public static function getColumns(string $table = null): Collection
     {
         if (null == $table) {
             $table = self::getTable();
@@ -69,11 +57,40 @@ trait Database
         }
     }
 
+
+    /**
+     * Get list of foreign keys
+     * @param string|null $table
+     * @return Collection
+     */
+    public static function getForeignKeys(string $table = null): Collection
+    {
+        if (null == $table) {
+            $table = self::getTable();
+        }
+
+        $dbname = Utils::getConfigElement("database")["dbname"];
+
+        $stmt = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME ".
+            "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE ".
+            "WHERE REFERENCED_TABLE_SCHEMA = ? AND TABLE_NAME = ? ".
+            "AND (COLUMN_NAME != 'id' OR CONSTRAINT_NAME != 'PRIMARY')";
+
+        try {
+            $q = Connection::getInstance()->prepare($stmt);
+            $q->execute([$dbname, $table]);
+            return Collection::from( $q->fetchAll(\PDO::FETCH_ASSOC) );
+
+        } catch (\Exception $e) {
+            die($e->getMessage());
+        }
+    }
+
     /**
      * Get table
      * @return Collection
      */
-    public static function getTables()
+    public static function getTables(): Collection
     {
         try {
             $q = Connection::getInstance()->prepare("SHOW TABLES");
@@ -94,7 +111,7 @@ trait Database
      * @return Collection
      * @throws \ReflectionException
      */
-    public static function where(string $where, array $params = [], string $order = null, string $limit = null)
+    public static function where(string $where, array $params = [], string $order = null, string $limit = null): Collection
     {
         $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::order($order) . self::limit($limit);
         return self::query($query, $params);
@@ -106,7 +123,7 @@ trait Database
      * @param array $params
      * @return object
      */
-    public static function whereFirst(string $where, array $params)
+    public static function whereFirst(string $where, array $params): object
     {
         return self::where($where, $params)->getFirst();
     }
@@ -117,7 +134,7 @@ trait Database
      * @param array $params
      * @return object
      */
-    public static function whereLast(string $where, array $params)
+    public static function whereLast(string $where, array $params): object
     {
         return self::where($where, $params)->getLast();
     }
@@ -129,7 +146,7 @@ trait Database
      * @param string|null $limit
      * @return Collection
      */
-    public static function find(array $params, string $order = null, string $limit = null)
+    public static function find(array $params, string $order = null, string $limit = null): Collection
     {
         $where = [];
         $p = [];
@@ -146,7 +163,7 @@ trait Database
      * @param array $params
      * @return object
      */
-    public static function findFirst(array $params)
+    public static function findFirst(array $params): object
     {
         return self::find($params)->getFirst();
     }
@@ -156,7 +173,7 @@ trait Database
      * @param array $params
      * @return object
      */
-    public static function findLast(array $params)
+    public static function findLast(array $params): object
     {
         return self::find($params)->getLast();
     }
@@ -166,7 +183,7 @@ trait Database
      * @param string|int $id
      * @return object
      */
-    public static function getById($id)
+    public static function getById($id): object
     {
         return self::findFirst(['id' => $id]);
     }
@@ -177,7 +194,7 @@ trait Database
      * @param string|null $limit
      * @return Collection
      */
-    public static function getAll(string $order = null, string $limit = null)
+    public static function getAll(string $order = null, string $limit = null): Collection
     {
         return self::query('SELECT * FROM '. self::getTable() . self::order($order) . self::limit($limit));
     }
@@ -186,7 +203,7 @@ trait Database
      * Get the first row
      * @return object
      */
-    public static function getFirst()
+    public static function getFirst(): object
     {
         return self::getAll()->getFirst();
     }
@@ -195,7 +212,7 @@ trait Database
      * Get the last row
      * @return object
      */
-    public static function getLast()
+    public static function getLast(): object
     {
         return self::getAll()->getLast();
     }
@@ -205,7 +222,7 @@ trait Database
      * @param string $order
      * @return string
      */
-    private static function order(?string $order)
+    private static function order(?string $order): string
     {
         return (null !== $order) ? (' ORDER BY ' . $order) : '';
     }
@@ -215,7 +232,7 @@ trait Database
      * @param string $limit
      * @return string
      */
-    private static function limit(?string $limit)
+    private static function limit(?string $limit): string
     {
         return (null !== $limit) ? (' LIMIT ' . $limit) : '';
     }
@@ -225,7 +242,7 @@ trait Database
      * @param array $params
      * @return int
      */
-    public static function count(string $where = null, array $params = [])
+    public static function count(string $where = null, array $params = []): int
     {
         if (null !== $where) { $where = ' WHERE '. $where; }
         else { $where = ''; }
@@ -260,7 +277,6 @@ trait Database
      * Get the key and the value with the getter
      * @param array $keys
      * @param array $values
-     * @return object
      */
     private static function setKeysAndValues(object $obj, ?array &$keys = [], ?array &$values = [])
     {
@@ -289,7 +305,7 @@ trait Database
      * Insert new values
      * @return object
      */
-    private static function insert(object $obj)
+    private static function insert($obj)
     {
         self::setKeysAndValues($obj, $keys, $values);
 
@@ -314,9 +330,8 @@ trait Database
      * Values and key with $this
      * @return int
      */
-    private static function update($obj)
+    private static function update($obj): int
     {
-        // TODO : tester l'override pour le typage du $obj
         self::setKeysAndValues($obj, $keys, $values);
 
         $values[] = $obj->getId();
@@ -333,7 +348,7 @@ trait Database
      * Delete row from database
      * @return int
      */
-    public static function delete(object $obj)
+    public static function delete(object $obj): int
     {
         $params = [];
         $values = [];
@@ -359,7 +374,7 @@ trait Database
      * Get the last id inserted
      * @return int
      */
-    public static function getLastId()
+    public static function getLastId(): int
     {
         return Connection::getInstance()->lastInsertId();
     }
@@ -371,7 +386,7 @@ trait Database
      * @return Collection
      * @throws \ReflectionException
      */
-    public static function query(string $statement, array $params = null)
+    public static function query(string $statement, array $params = null): Collection
     {
         $q = Connection::getInstance()->prepare($statement);
         $q->execute($params);
@@ -389,7 +404,7 @@ trait Database
      * @param array $params
      * @return int
      */
-    public static function exec(string $statement, array $params)
+    public static function exec(string $statement, array $params): int
     {
         $q = Connection::getInstance()->prepare($statement);
         return $q->execute($params);
