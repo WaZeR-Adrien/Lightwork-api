@@ -1,7 +1,7 @@
 <?php
 namespace Kernel\Orm;
 
-use Kernel\Loggers\Logger;
+use AdrienM\Logger\Logger;
 use Kernel\Tools\Utils;
 
 class Connection
@@ -26,7 +26,7 @@ class Connection
 
         } catch(\Exception $e) {
             // Register log
-            $logger = Logger::getInstance(Logger::LOG_ERROR);
+            $logger = Logger::getInstance(null, Logger::LOG_ERROR);
             $logger->write($e->getMessage() . ". Code : " . OrmException::CONNECTION);
 
             die($e->getMessage());

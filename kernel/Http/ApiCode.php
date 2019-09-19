@@ -78,7 +78,7 @@ class ApiCode implements \JsonSerializable
                 $this->message = $resCode['message'];
             } else {
                 // Register log
-                $logger = Logger::getInstance(Logger::LOG_ERROR);
+                $logger = Logger::getInstance(null, Logger::LOG_ERROR);
                 $logger->write("Api code $code does not exist. Code : " . HttpException::API_CODE_DOES_NOT_EXIST);
 
                 throw new HttpException("Api code $code does not exist", HttpException::API_CODE_DOES_NOT_EXIST);

@@ -2,6 +2,7 @@
 
 namespace Kernel\Cli;
 
+use AdrienM\Collection\Collection;
 use Kernel\Orm\Database;
 use Kernel\Tools\Utils;
 use Nette\PhpGenerator\ClassType;
@@ -116,6 +117,8 @@ class CLI
         echo "Configuration of your models (identically to your tables)...\n";
         echo Color::colorString("Do you want generate DAO with the models ?", Color::BOLD);
         $generateDao = self::prompt(" [y/n] : ", null, true);
+        echo Color::colorString("Do you want generate Collection with the models ?", Color::BOLD);
+        $generateCollection = self::prompt(" [y/n] : ", null, true);
         echo "Fetch tables...\n";
 
         $tables = Database::getTables()->getAll();
@@ -180,10 +183,13 @@ class CLI
                     echo "=> " . Color::colorString("ACTION REQUIRED ", Color::FOREGROUND_BOLD_RED) .
                         "$foreignKey target the model " . Color::colorString($type, Color::BOLD);
                     $type = Utils::toPascalCase( self::prompt(" [Press enter or correct the target] : ", $type) );
+                    $dao = "\\Models\\Dao\\" . $type . "DAO";
+                    $type = "\\Models\\$type";
 
                     // Push schema
                     $schemas[$field] = [
                         "model" => $type,
+                        "dao" => $dao,
                         "table" => $foreignKeys->filter(function ($fk) use ($column) {
                             return $fk["COLUMN_NAME"] == $column["Field"];
                         })->getFirst()["REFERENCED_TABLE_NAME"]
@@ -209,11 +215,7 @@ class CLI
                     ->addComment("@return $type");
 
                 $param = new Parameter($field);
-                if (strtolower($type) == $field) {
-                    $param->setTypeHint("\\Models\\$type");
-                } else {
-                    $param->setTypeHint("$type");
-                }
+                $param->setTypeHint("$type");
 
                 $class->addMethod("set$methodName")
                     ->setVisibility("public")
@@ -234,6 +236,13 @@ class CLI
             $class->addMethod("getSchemas")
                 ->setStatic()
                 ->setBody("return \Kernel\\Tools\\Collection\\Collection::from( self::\$schemas );")
+                ->addComment("Get the schemas of foreign keys")
+                ->addComment("@return \Kernel\\Tools\\Collection\\Collection");
+
+            // Get all properties
+            $class->addMethod("getProperties")
+                ->setBody("return \Kernel\\Tools\\Collection\\Collection::from( array_keys( get_object_vars(\$this) ) );")
+                ->addComment("Get collection of non-static properties")
                 ->addComment("@return \Kernel\\Tools\\Collection\\Collection");
 
             $content = "<?php\n\n" . $namespace;
@@ -263,6 +272,11 @@ class CLI
                 self::generateDao($className . "DAO", $className, $table);
             }
 
+            // Generate Collection
+            if (strtolower($generateCollection) == "y") {
+                self::generateCollection($className . "Collection", $className);
+            }
+
             // End
             echo str_repeat("=", strlen($line) - 12) . "\n\n";
         }
@@ -273,7 +287,7 @@ class CLI
      * @param string $className
      * @param string $table
      */
-    private static function generateDao(string $dao, string $model,string $table): void
+    private static function generateDao(string $dao, string $model, string $table): void
     {
         // Config of the class
         $namespace = new PhpNamespace("Models\Dao");
@@ -287,44 +301,33 @@ class CLI
             ->addComment("@model $model")
             ->addComment("@table $table");
 
-        // Target DAO
+        // Target Model
         $class->addProperty("model", $model)
             ->setStatic()
             ->addComment("Model")
             ->addComment("@var string");
 
-        // Override some methods
+        // Target Table
+        $class->addProperty("table", $table)
+            ->setStatic()
+            ->addComment("Table")
+            ->addComment("@var string");
+
+        // Override return methods
         foreach (ClassType::from(Database::class)->getMethods() as $method) {
-            if ($method->getVisibility() == "public" && in_array($method->getName(),
-                    ["whereFirst", "whereLast", "findFirst", "findLast", "getById", "getFirst", "getLast", "store"])) {
+            if ($method->getVisibility() == "public" && !in_array($method->getName(), ["__construct", "__call"])) {
 
-                $newMethod = $class->addMethod($method->getName())
-                    ->setVisibility("public")
-                    ->setStatic($method->isStatic())
-                    ->setParameters($method->getParameters())
-                    ->addComment("Override of " . $method->getName() . "() to indicate the real return type");
+                $type = $method->getReturnType();
 
-                // parameters
-                if ($method->getName() == "store") {
-                    $newMethod->addComment("@param \Models\\$model \$obj")
-                        ->addComment("@return int|\Models\\$model");
-
-                    $newMethod->addParameter("obj");
-                } else {
-                    $newMethod->addComment("@return \Models\\$model");
-
-                    foreach ($method->getParameters() as $parameter) {
-                        $newMethod->addParameter($parameter->getName())
-                            ->setTypeHint($parameter->getTypeHint());
-                    }
+                if ($type == "object") {
+                    $type = "Models\\$model";
+                } elseif ($type == "AdrienM\Collection\Collection") {
+                    $type = "Models\Collection\\$model" . "Collection";
+                } elseif ($method->getName() == "store") {
+                    $type = "int|Models\\$model";
                 }
 
-                // body of method
-                $parameters = implode(", ", array_map(function (Parameter $parameter) {
-                    return "$" . $parameter->getName();
-                }, $method->getParameters()));
-
-                $newMethod->setBody("return parent::" . $method->getName() . "($parameters);");
+                $class->addComment("@method $type " . $method->getName());
             }
         }
 
@@ -350,6 +353,71 @@ class CLI
 
         // End
         echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $dao dao\n";
+    }
+
+    /**
+     * Generate Collection
+     * @param string $className
+     * @param string $table
+     */
+    private static function generateCollection(string $collection, string $model): void
+    {
+        // Config of the class
+        $namespace = new PhpNamespace("Models\Collection");
+        $class = $namespace->addClass($collection);
+        $class->addExtend("\AdrienM\Collection\Collection");
+
+        // Annotations class
+        $class->addComment("Class $collection")
+            ->addComment("@package Models\Collection")
+            ->addComment("@model $model");
+
+        // Target Model
+        $class->addProperty("model", $model)
+            ->setStatic()
+            ->addComment("Model")
+            ->addComment("@var string");
+
+        // Override return methods
+        foreach (ClassType::from(Collection::class)->getMethods() as $method) {
+            if ($method->getVisibility() == "public" && !in_array($method->getName(), ["__construct", "__call"])) {
+
+                $type = $method->getReturnType();
+
+                if ($type == "array") {
+                    $type = "Models\\$model" . "[]";
+                } else if ($type == "object" || null == $type) {
+                    $type = "Models\\$model";
+                } elseif ($type == "AdrienM\Collection\Collection") {
+                    $type = "Models\Collection\\$collection";
+                }
+
+                $class->addComment("@method $type " . $method->getName());
+            }
+        }
+
+        $content = "<?php\n\n" . $namespace;
+
+        // Get directory
+        $dir = dirname(__FILE__);
+
+        // Get real path to the root path
+        $rootDir = realpath($dir . '/../..');
+
+        // Get the path of the file to create
+        $path = "$rootDir/app/models/Collection/$collection.php";
+
+        // Open/Create the file
+        $file = fopen($path, "w");
+
+        // Write the content of class
+        fwrite($file, $content);
+
+        // Close and save the file
+        fclose($file);
+
+        // End
+        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $collection collection\n";
     }
 
     /**
