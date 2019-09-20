@@ -5,7 +5,7 @@ use Controllers\Docs;
 use Kernel\Config;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
-use Kernel\Tools\Collection\Collection;
+use AdrienM\Collection\Collection;
 use Kernel\Tools\Utils;
 use Models\Auth;
 use Models\User;
@@ -168,7 +168,7 @@ class Route
     {
         $data = json_decode(file_get_contents('php://input'), true);
 
-        $request->setBody( Collection::from($data) );
+        $request->setBody( Collection::from(null != $data ? $data : []) );
 
         $request->setArgs( Collection::from($this->matches) );
 

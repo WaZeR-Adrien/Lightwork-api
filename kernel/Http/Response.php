@@ -4,7 +4,7 @@ namespace Kernel\Http;
 use GreenCape\Xml\Converter;
 use Kernel\Loggers\HttpLogger;
 use Kernel\Router\Route;
-use Kernel\Tools\Collection\Collection;
+use AdrienM\Collection\Collection;
 use Kernel\Twig;
 use Symfony\Component\Yaml\Yaml;
 
@@ -208,7 +208,7 @@ class Response
     public function toJson()
     {
         // Set Content Type to JSON
-        $this->headers->update("Content-Type", "application/json");
+        $this->headers->replace("Content-Type", "application/json");
 
         // Convert the content to JSON
         $this->content = json_encode($this->body->getAll());
@@ -222,7 +222,7 @@ class Response
     public function toXml()
     {
         // Set Content Type to XML
-        $this->headers->update("Content-Type", "text/xml; charset=UTF-8");
+        $this->headers->replace("Content-Type", "text/xml; charset=UTF-8");
 
         // Recursive cast
         $body = json_decode(json_encode($this->body->getAll()), true);
@@ -239,7 +239,7 @@ class Response
     public function toYaml()
     {
         // Set Content Type to YAML
-        $this->headers->update("Content-Type", "text/yaml");
+        $this->headers->replace("Content-Type", "text/yaml");
 
         // Convert the content to YAML
         $this->content = Yaml::dump($this->body->getAll());
@@ -257,7 +257,7 @@ class Response
     public function toView($view)
     {
         // Set Content Type to HTML
-        $this->headers->update("Content-Type", "text/html; charset=UTF-8");
+        $this->headers->replace("Content-Type", "text/html; charset=UTF-8");
 
         $twig = Twig::getInstance();
 

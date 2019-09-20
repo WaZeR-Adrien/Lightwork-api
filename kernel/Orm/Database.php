@@ -2,7 +2,6 @@
 namespace Kernel\Orm;
 use AdrienM\Collection\Collection;
 use Kernel\Tools\Utils;
-use phpDocumentor\Reflection\DocBlock\Tags\Return_;
 
 trait Database
 {

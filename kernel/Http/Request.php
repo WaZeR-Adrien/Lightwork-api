@@ -1,7 +1,7 @@
 <?php
 namespace Kernel\Http;
 
-use Kernel\Tools\Collection\Collection;
+use AdrienM\Collection\Collection;
 
 class Request
 {
