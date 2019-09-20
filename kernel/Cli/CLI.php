@@ -264,7 +264,7 @@ class CLI
             // Close and save the file
             fclose($file);
 
-            echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $className model\n";
+            echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " /app/models/". Color::colorString("$className.php", Color::BOLD) . "\n";
 
             // Generate DAO
             if (strtolower($generateDao) == "y") {
@@ -351,7 +351,7 @@ class CLI
         fclose($file);
 
         // End
-        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $dao dao\n";
+        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " /app/models/Dao/". Color::colorString("$dao.php", Color::BOLD) . "\n";
     }
 
     /**
@@ -416,7 +416,7 @@ class CLI
         fclose($file);
 
         // End
-        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " $collection collection\n";
+        echo Color::colorString("CREATE", Color::FOREGROUND_BOLD_GREEN) . " /app/models/Collection/". Color::colorString("$collection.php", Color::BOLD) . "\n";
     }
 
     /**
