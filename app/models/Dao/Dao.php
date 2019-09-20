@@ -1,52 +1,52 @@
 <?php
 namespace Models\Dao;
 
+use Controllers\Docs;
 use Kernel\Orm\Database;
+use AdrienM\Collection\Collection;
+use Kernel\Tools\Utils;
+use Models\Entity;
 
 /**
  * Class Dao
  * @package Models\dao
  */
-class Dao
+abstract class Dao
 {
     use Database;
-
-
 
     /**
      * Fetch data with id
      * Example :
      * $user = new User(10);
      * $user->fetch(); // Retrieve all data from the user
+     * @param Entity $obj
      * @param bool $recursive
      */
-    public function fetch($recursive = false)
+    public static function fetch($obj, bool $recursive = false)
     {
-        $class = get_class($this);
+        foreach ($obj->toArray() as $k => $v) {
+            $upper = Utils::toPascalCase($k);
+            $getter = "get$upper";
+            $setter = "set$upper";
 
-        if ($this->getId() != null) {
-            $reflect = new \ReflectionObject($this);
-            $obj = $class::getById($this->getId());
+            if (is_object($obj->$getter()) && null != $obj->$getter()->getId()) {
+                /**
+                 * @var Collection $schemas
+                 */
+                $schemas = $obj::getSchemas();
 
-            foreach ($reflect->getProperties() as $property) {
-                if (!$property->isStatic()) {
+                if ($schemas->keyExists($k)) {
+                    $dao = $schemas->get($k)["dao"];
+                    $res = $dao::getById($obj->$getter()->getId());
 
-                    $setter = "set" . Utils::toPascalCase($property->getName());
-                    $getter = "get" . Utils::toPascalCase($property->getName());
+                    $obj->$setter( $res );
 
-                    // If the value is an object and the recursive mode is true :
-                    // Fetch all sub data
-                    if ($recursive && is_object($obj->$getter())) {
-                        $obj->$getter()->fetch(true);
-
-                    }
-
-                    $this->$setter( $obj->$getter() );
-
+                    if ($recursive) { $obj->$setter( $dao::fetch($res, true) ); }
                 }
             }
         }
 
-        return $this;
+        return $obj;
     }
 }

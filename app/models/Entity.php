@@ -3,6 +3,10 @@
 namespace Models;
 
 use Controllers\Docs;
+use Jasny\PhpdocParser\PhpdocParser;
+use Jasny\PhpdocParser\Set\PhpDocumentor;
+use Jasny\PhpdocParser\Tag\DescriptionTag;
+use AdrienM\Logger\Logger;
 use Kernel\Tools\Utils;
 
 /**
@@ -19,20 +23,24 @@ class Entity
         foreach ($this as $k => $v) {
             if (strpos($k, '_id')) {
                 $attr = substr($k, 0, strlen($k) - 3);
-                $attr = Utils::toPascalCase($attr);
+                $upperAttr = Utils::toPascalCase($attr);
 
-                $annotations = Docs::getPhpDoc($this, "get$attr");
+                /**
+                 * @var Collection $schemas
+                 */
+                $schemas = static::getSchemas();
 
-                if (!empty($annotations["return"])) {
-                    $class = '\Models\\' . $annotations["return"]["type"];
+
+                if ($schemas->keyExists($attr)) {
+                    $class = $schemas->get($attr)["model"];
                 } else {
-                    $class = '\Models\\' . $attr;
+                    $class = "\\Models\\" . $upperAttr;
                 }
 
-                $class = new $class($v);
+                $obj = new $class($v);
 
-                $setter = "set$attr";
-                $this->$setter($class);
+                $setter = "set$upperAttr";
+                $this->$setter($obj);
 
                 unset($this->$k);
             }
@@ -47,25 +55,23 @@ class Entity
 	{
 		$array = [];
 
-        $reflect = new \ReflectionObject($this);
+        foreach ($this->getProperties()->getAll() as $property) {
+            $getter = "get" . Utils::toPascalCase($property);
 
-        foreach ($reflect->getProperties() as $property) {
-            if (!$property->isStatic()) {
-
-                $getter = "get" . Utils::toPascalCase($property->getName());
-
+            if (method_exists($this, $getter)) {
                 $value = $this->$getter();
-
-                // If the value is an object :
-                // Load this function to convert the sub objects in arrays...
-                if (is_object($value)) {
-                    $value = $value->toArray();
-                }
-
-                $array[$property->getName()] = $value;
-
+            } else {
+                $value = $this->$property;
             }
-		}
+
+            // If the value is an object :
+            // Load this function to convert the sub objects in arrays...
+            if (is_object($value)) {
+                $value = $value->toArray();
+            }
+
+            $array[$property] = $value;
+        }
 
 		return $array;
 	}
