@@ -66,10 +66,10 @@ class Mail
         try {
             // Server settings for PHPMailer
             $mail->isSMTP();
-            $mail->Host = Utils::getConfigElement('mail')['host'];
+            $mail->Host = Utils::getConfigElement('mail')->host;
             $mail->SMTPAuth = true;
-            $mail->Username = Utils::getConfigElement('mail')['username']; // SMTP username
-            $mail->Password = Utils::getConfigElement('mail')['pw']; // SMTP password
+            $mail->Username = Utils::getConfigElement('mail')->username; // SMTP username
+            $mail->Password = Utils::getConfigElement('mail')->pw; // SMTP password
             $mail->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
             $mail->Port = 465;
 

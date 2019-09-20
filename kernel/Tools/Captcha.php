@@ -15,7 +15,7 @@ class Captcha
             return false; // If is empty stop search and return false
         }
 
-        $apiSecret = Utils::getConfigElement('captcha')['apiSecret'];
+        $apiSecret = Utils::getConfigElement('captcha')->apiSecret;
 
         $url = "https://www.google.com/recaptcha/api/siteverify?secret={$apiSecret}&response={$code}";
 

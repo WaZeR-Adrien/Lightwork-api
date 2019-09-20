@@ -15,7 +15,7 @@ class Connection
     {
         try {
             $db = Utils::getConfigElement('database');
-            $pdo = new \PDO('mysql:dbname='. $db['dbname'] .';host='. $db['host'], $db['user'], $db['password']);
+            $pdo = new \PDO('mysql:dbname='. $db->dbname .';host='. $db->host, $db->user, $db->password);
             $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
             $pdo->exec('SET NAMES \'utf8\'');

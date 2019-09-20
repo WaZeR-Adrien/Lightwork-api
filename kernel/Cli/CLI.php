@@ -127,7 +127,7 @@ class CLI
         foreach ($tables as $key => $table) {
 
             // Get name of the table
-            $table = $table['Tables_in_' . Utils::getConfigElement('database')['dbname']];
+            $table = $table['Tables_in_' . Utils::getConfigElement('database')->dbname];
             $className = Utils::toPascalCase($table);
 
             // Start

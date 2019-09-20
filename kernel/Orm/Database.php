@@ -69,7 +69,7 @@ trait Database
             $table = self::getTable();
         }
 
-        $dbname = Utils::getConfigElement("database")["dbname"];
+        $dbname = Utils::getConfigElement("database")->dbname;
 
         $stmt = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME ".
             "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE ".
