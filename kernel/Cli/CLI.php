@@ -234,15 +234,15 @@ class CLI
 
             $class->addMethod("getSchemas")
                 ->setStatic()
-                ->setBody("return \Kernel\\Tools\\Collection\\Collection::from( self::\$schemas );")
+                ->setBody("return \AdrienM\Collection\Collection::from( self::\$schemas );")
                 ->addComment("Get the schemas of foreign keys")
-                ->addComment("@return \Kernel\\Tools\\Collection\\Collection");
+                ->addComment("@return \AdrienM\Collection\Collection");
 
             // Get all properties
             $class->addMethod("getProperties")
-                ->setBody("return \Kernel\\Tools\\Collection\\Collection::from( array_keys( get_object_vars(\$this) ) );")
+                ->setBody("return \AdrienM\Collection\Collection::from( array_keys( get_object_vars(\$this) ) );")
                 ->addComment("Get collection of non-static properties")
-                ->addComment("@return \Kernel\\Tools\\Collection\\Collection");
+                ->addComment("@return \AdrienM\Collection\Collection");
 
             $content = "<?php\n\n" . $namespace;
 
@@ -319,14 +319,20 @@ class CLI
                 $type = $method->getReturnType();
 
                 if ($type == "object") {
-                    $type = "Models\\$model";
+                    $type = "\Models\\$model";
                 } elseif ($type == "AdrienM\Collection\Collection") {
-                    $type = "Models\Collection\\$model" . "Collection";
+                    $type = "\Models\Collection\\$model" . "Collection";
                 } elseif ($method->getName() == "store") {
                     $type = "int|Models\\$model";
                 }
 
-                $class->addComment("@method $type " . $method->getName());
+                $params = [];
+                foreach ($method->getParameters() as $parameter) {
+                    $typeHint = $parameter->getTypeHint() ? $parameter->getTypeHint() . " " : "";
+                    $params[] = $typeHint . "$" . $parameter->getName();
+                }
+
+                $class->addComment("@method static $type " . $method->getName() . "(" . implode(", ", $params) . ")");
             }
         }
 
@@ -384,14 +390,20 @@ class CLI
                 $type = $method->getReturnType();
 
                 if ($type == "array") {
-                    $type = "Models\\$model" . "[]";
+                    $type = "\Models\\$model" . "[]";
                 } else if ($type == "object" || null == $type) {
-                    $type = "Models\\$model";
+                    $type = "\Models\\$model";
                 } elseif ($type == "AdrienM\Collection\Collection") {
-                    $type = "Models\Collection\\$collection";
+                    $type = "\Models\Collection\\$collection";
                 }
 
-                $class->addComment("@method $type " . $method->getName());
+                $params = [];
+                foreach ($method->getParameters() as $parameter) {
+                    $typeHint = $parameter->getTypeHint() ? $parameter->getTypeHint() . " " : "";
+                    $params[] = $typeHint . "$" . $parameter->getName();
+                }
+
+                $class->addComment("@method $type " . $method->getName() . "(" . implode(", ", $params) . ")");
             }
         }
 
