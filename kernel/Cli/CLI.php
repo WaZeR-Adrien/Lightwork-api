@@ -336,6 +336,8 @@ class CLI
             }
         }
 
+        $class->addComment("@method static \Models\\$model fetch(\$obj, bool \$recursive = false)");
+
         $content = "<?php\n\n" . $namespace;
 
         // Get directory
