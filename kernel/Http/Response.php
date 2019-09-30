@@ -160,49 +160,6 @@ class Response
     }
 
     /**
-     * Generate render data in JSON / XML...
-     * @param string $code
-     * @param string $key
-     * @return Response
-     */
-    public function fromApi($code, $key = null)
-    {
-        // Get type of response by first letter of the code
-        $type = $code[0] == "S" ? "success" : "error";
-
-        // Create new response code
-        $this->apiCode = new ApiCode($code);
-
-        $this->status = $this->apiCode->getStatus();
-
-        if (null != $key) {
-            // It's the target key (when there are a problem for example)
-            $this->apiCode->setMessage(
-                preg_replace('/:key/', $key, $this->apiCode->getMessage())
-            );
-        }
-
-        // Store error in logs
-        if ($type == "error") {
-            self::addEventLog($key);
-        }
-
-        // Init the content by concatenating of success/error with responseCode and of data
-        $body = new Collection();
-
-        $body->add($this->apiCode->jsonSerialize(), $type);
-
-        if (!$this->body->isEmpty()) {
-            $body->add($this->body->getAll(), "data");
-        }
-
-        // Replace body
-        $this->body->purge()->push($body);
-
-        return $this;
-    }
-
-    /**
      * Convert the body to JSON format
      */
     public function toJson()

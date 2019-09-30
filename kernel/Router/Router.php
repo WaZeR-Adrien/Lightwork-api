@@ -1,8 +1,11 @@
 <?php
 namespace Kernel\Router;
-use Controllers\Controller;
-use http\Client\Response;
+use AdrienM\Collection\Collection;
+use AdrienM\Logger\Logger;
+use Kernel\Api\ApiErrorCode;
+use Kernel\Api\ApiException;
 use Kernel\Http\ApiCode;
+use Kernel\Loggers\HttpLogger;
 
 class Router
 {
@@ -71,13 +74,21 @@ class Router
             die();
         }
 
+        // Instance of HttpLogger to log errors and success called
+        $httpLogger = HttpLogger::getInstance();
         try {
             foreach ($this->routes[$method] as $route) {
 
                 if ($route->match($this->currentUrl)) {
                     $res = $route->call($this);
 
+
                     if ("object" == gettype($res) && "Kernel\Http\Response" == get_class($res)) {
+                        // Log the success
+                        $type = is_string($route->getCallable()) ? $route->getCallable() : "FUNCTION";
+                        $httpLogger->setType($type);
+                        $httpLogger->write("SUCCESS, , " . $res->getStatus() . ", $method, " . $this->currentUrl . ", " . $_SERVER['REMOTE_ADDR']);
+
                         // Set Headers
                         foreach ($res->getHeaders()->getAll() as $key => $value) {
                             header($key . ':' . $value);
@@ -88,33 +99,46 @@ class Router
 
                         die($res->getContent());
                     } else {
-                        throw new RouterException('You must return the Response object.', 2);
+                        throw new RouterException('You must return an instance of Response.', 1);
                     }
 
                     return $route;
                 }
 
             }
-            throw new RouterException('No matching routes', 1);
-        }
-        catch (RouterException $e) {
-            // Error 404
-            if ($e->getCode() === 1) {
-                $res = new \Kernel\Http\Response();
+            throw new ApiException(ApiErrorCode::NF404);
 
-                $res->fromApi("E_A001")->toJson();
+        } catch (\Exception $e) {
+            // Instance of Logger to log exception
+            $logger = Logger::getInstance();
+            // Log the exception
+            $logger->setType(get_class($e));
+            $logger->write("[" . $e->getCode() . "] " . $e->getMessage());
 
-                // Set Content Type
-                header("Content-Type:" . $res->getHeaders()->get("Content-Type"));
-
-                // Set Https status code
-                http_response_code($res->getApiCode()->getStatus());
-
-                die($res->getContent());
+            if ($logger->getType()  == "Kernel\Api\ApiException") {
+                $httpLogger->setType( $logger->getType() );
+                $httpLogger->write($e->getCode() . ", , " . $e->getStatus() . ", $method, " . $this->currentUrl . ", " . $_SERVER['REMOTE_ADDR']);
             }
-            else {
-                die($e->getMessage());
-            }
+
+            $res = new \Kernel\Http\Response();
+
+            $res->setBody(Collection::from([
+                "error" => [
+                    "code" => $e->getCode(),
+                    "message" => $e->getMessage()
+                ]
+            ]));
+
+            $res->toJson();
+
+            // Set Content Type
+            header("Content-Type:" . $res->getHeaders()->get("Content-Type"));
+
+            // Set Https status code
+            $status = ($logger->getType() == "Kernel\Api\ApiException") ? $e->getStatus() : 500;
+            http_response_code($status);
+
+            die($res->getContent());
         }
 
     }
