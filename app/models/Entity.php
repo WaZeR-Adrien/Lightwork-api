@@ -18,7 +18,7 @@ class Entity
     /**
      * Convert all foreign key to object
      */
-    public function foreignKeyToObject()
+    public function foreignKeyToObject(): void
     {
         foreach ($this as $k => $v) {
             if (strpos($k, '_id')) {
@@ -51,7 +51,7 @@ class Entity
      * Convert the object to a array and the sub objects to sub arrays
      * @return array
 	 */
-	public function toArray()
+	public function toArray(): array
 	{
 		$array = [];
 
