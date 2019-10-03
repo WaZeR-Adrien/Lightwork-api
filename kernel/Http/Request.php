@@ -2,6 +2,7 @@
 namespace Kernel\Http;
 
 use AdrienM\Collection\Collection;
+use Kernel\Orm\Pageable;
 
 class Request
 {
@@ -12,10 +13,22 @@ class Request
     private $method;
 
     /**
-     * Params Collection
+     * Query params Collection
+     * @var Collection
+     */
+    private $queryParams;
+
+    /**
+     * Arguments of query Collection
      * @var Collection
      */
     private $args;
+
+    /**
+     * Page for the ORM
+     * @var Pageable
+     */
+    private $page;
     
     /**
      * Headers Collection
@@ -48,7 +61,7 @@ class Request
     public function __construct($method)
     {
         $this->method = $method;
-        $this->args = $this->headers = $this->body = $this->files = new Collection();
+        $this->queryParams = $this->args = $this->headers = $this->body = $this->files = new Collection();
     }
 
     /**
@@ -70,6 +83,22 @@ class Request
     /**
      * @return Collection
      */
+    public function getQueryParams()
+    {
+        return $this->queryParams;
+    }
+
+    /**
+     * @param Collection $queryParams
+     */
+    public function setQueryParams(Collection $queryParams)
+    {
+        $this->queryParams = $queryParams;
+    }
+
+    /**
+     * @return Collection
+     */
     public function getArgs()
     {
         return $this->args;
@@ -81,6 +110,22 @@ class Request
     public function setArgs(Collection $args)
     {
         $this->args = $args;
+    }
+
+    /**
+     * @return Pageable
+     */
+    public function getPage(): Pageable
+    {
+        return $this->page;
+    }
+
+    /**
+     * @param Pageable $page
+     */
+    public function setPage(Pageable $page): void
+    {
+        $this->page = $page;
     }
 
     /**
