@@ -6,6 +6,8 @@ use Kernel\Config;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
 use AdrienM\Collection\Collection;
+use Kernel\Orm\Pageable;
+use Kernel\Orm\Sort;
 use Kernel\Tools\Utils;
 use Models\Auth;
 use Models\User;
@@ -172,9 +174,45 @@ class Route
 
         $request->setArgs( Collection::from($this->matches) );
 
+        $request->setQueryParams( Collection::from($_GET) );
+
+        $this->setPageable($request);
+
         if (!empty($_FILES)) {
             $request->setFiles( Collection::from($_FILES) );
         }
+    }
+
+    private function setPageable(Request &$request)
+    {
+        $qp = $request->getQueryParams();
+
+        // Set params
+        $length = $qp->keyExists("length") ? $qp->get("length") : null;
+        $page = $qp->keyExists("page") ? $qp->get("page") : null;
+
+
+        if ($qp->keyExists("sort")) {
+            // Init object of Sort
+            $sort = new Sort();
+
+            $rules = explode(",", $qp->get("sort"));
+
+            // Add rule in the $sort object
+            foreach ($rules as $rule) {
+                // Get the key between the start and [
+                if ( preg_match('/^([\w\_\-]+)\[/', $rule, $key) ) {
+                    if (strpos(strtolower($rule), "[asc]")) {
+                        $sort->toAscending($key[1]);
+                    } else {
+                        $sort->toDescending($key[1]);
+                    }
+                }
+            }
+        }
+
+        // Init page
+        $request->setPage( new Pageable($length, $page, $sort) );
     }
 
     /**

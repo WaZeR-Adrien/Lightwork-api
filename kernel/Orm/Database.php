@@ -110,10 +110,10 @@ trait Database
      * @return Collection
      * @throws \ReflectionException
      */
-    public static function where(string $where, array $params = [], string $order = null, string $limit = null): Collection
+    public static function where(string $where, array $params = [], Pageable $page = null): Collection
     {
-        $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where . self::order($order) . self::limit($limit);
-        return self::query($query, $params);
+        $query = 'SELECT * FROM `' . self::getTable() . '` WHERE ' . $where;
+        return self::query($query, $params, $page);
     }
 
     /**
@@ -145,7 +145,7 @@ trait Database
      * @param string|null $limit
      * @return Collection
      */
-    public static function find(array $params, string $order = null, string $limit = null): Collection
+    public static function find(array $params, Pageable $page = null): Collection
     {
         $where = [];
         $p = [];
@@ -154,7 +154,7 @@ trait Database
             $p[] = $v;
         }
 
-        return self::where(implode(' and ', $where), $p, $order, $limit);
+        return self::where(implode(' and ', $where), $p, $page);
     }
 
     /**
@@ -193,9 +193,9 @@ trait Database
      * @param string|null $limit
      * @return Collection
      */
-    public static function getAll(string $order = null, string $limit = null): Collection
+    public static function getAll(Pageable $page = null): Collection
     {
-        return self::query('SELECT * FROM '. self::getTable() . self::order($order) . self::limit($limit));
+        return self::query($page, 'SELECT * FROM '. self::getTable());
     }
 
     /**
@@ -214,26 +214,6 @@ trait Database
     public static function getLast(): object
     {
         return self::getAll()->getLast();
-    }
-
-    /**
-     * Set string ORDER BY...
-     * @param string $order
-     * @return string
-     */
-    private static function order(?string $order): string
-    {
-        return (null !== $order) ? (' ORDER BY ' . $order) : '';
-    }
-
-    /**
-     * Set string LIMIT...
-     * @param string $limit
-     * @return string
-     */
-    private static function limit(?string $limit): string
-    {
-        return (null !== $limit) ? (' LIMIT ' . $limit) : '';
     }
 
     /**
@@ -379,14 +359,69 @@ trait Database
     }
 
     /**
+     * Define the ORDER BY and LIMIT of the statement with the page
+     * @param Pageable $page
+     * @param string $statement
+     * @param array|null $params
+     */
+    private static function paginate(Pageable $page, string $statement, array $params = null)
+    {
+        // Init the total length for page
+        self::initTotalLength($page, $statement, $params);
+
+        // Set the order by
+        $sort = $page->getSort();
+        if ($sort && !$sort->getRules()->isEmpty()) {
+            $sortString = "";
+            foreach ($sort->getRules()->getAll() as $key => $rule) {
+                $sortString .= "$key $rule, ";
+            }
+
+            $statement .= " ORDER BY " . substr($sortString, 0, strlen($sortString) - 2);
+        }
+
+        // Set the limit
+        $current = $page->getCurrentPage();
+        $length = $page->getLengthPerPage();
+        if ($current && $length) {
+            $from = (($current - 1) * $length);
+
+            $statement .= " LIMIT $from, $length";
+        }
+
+        return $statement;
+    }
+
+    /**
+     * Get the total length for the statement
+     * @param Pageable $page
+     * @param string $statement
+     * @param array|null $params
+     */
+    private static function initTotalLength(Pageable $page, string $statement, array $params = null)
+    {
+        // Replace string between SELECT and FROM to add "count(*) as nb"
+        $regex = "/(?<=SELECT)(.*)(?=FROM)/";
+
+        $q = Connection::getInstance()->prepare( preg_replace($regex, " count(*) as nb ", $statement) );
+        $q->execute($params);
+
+        $page->setTotal( $q->fetchAll(\PDO::FETCH_ASSOC)[0]["nb"] );
+    }
+
+    /**
      * Execute query
      * @param string $statement
      * @param array|null $params
      * @return Collection
      * @throws \ReflectionException
      */
-    public static function query(string $statement, array $params = null): Collection
+    public static function query(string $statement, array $params = null, Pageable $page = null): Collection
     {
+        if ($page) {
+            $statement = self::paginate($page, $statement, $params);
+        }
+
         $q = Connection::getInstance()->prepare($statement);
         $q->execute($params);
         $res = $q->fetchAll(\PDO::FETCH_CLASS, self::getModel());
