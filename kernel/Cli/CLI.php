@@ -3,6 +3,8 @@
 namespace Kernel\Cli;
 
 use AdrienM\Collection\Collection;
+use Controllers\Docs;
+use Jasny\PhpdocParser\PhpdocParser;
 use Kernel\Orm\Database;
 use Kernel\Tools\Utils;
 use Nette\PhpGenerator\ClassType;
@@ -312,7 +314,7 @@ class CLI
             ->addComment("Table")
             ->addComment("@var string");
 
-        // Override return methods
+        // Override methods
         foreach (ClassType::from(Database::class)->getMethods() as $method) {
             if ($method->getVisibility() == "public" && !in_array($method->getName(), ["__construct", "__call"])) {
 
@@ -326,19 +328,44 @@ class CLI
                     $type = "int|Models\\$model";
                 }
 
+                // Comments @method of class
                 $params = [];
                 foreach ($method->getParameters() as $parameter) {
                     $typeHint = $parameter->getTypeHint() ? $parameter->getTypeHint() . " " : "";
                     $params[] = $typeHint . "$" . $parameter->getName();
                 }
+                
+                // Override method
+                $overrideMethod = $class->addMethod($method->getName())
+                    ->addComment("Override " . $method->getName() . "() to indicate the real return type")
+                    ->addComment("@return $type")
+                    ->setStatic($method->isStatic())
+                    ->setReturnType($method->getReturnType())
+                    ->setParameters($method->getParameters());
 
-                $class->addComment("@method static $type " . $method->getName() . "(" . implode(", ", $params) . ")");
+                $parameters = implode(", ", array_map(function (Parameter $parameter) {
+                    return "$" . $parameter->getName();
+                }, $method->getParameters()));
+
+                $overrideMethod->setBody("return parent::" . $method->getName() . "($parameters);");
             }
         }
 
-        $class->addComment("@method static \Models\\$model fetch(\$obj, bool \$recursive = false)");
+        //$class->addComment("@method static \Models\\$model fetch(\$obj, bool \$recursive = false)");
+        $recursive = new Parameter("recursive");
+        $recursive->setDefaultValue(false);
+        $recursive->setTypeHint("bool");
+
+        $class->addMethod("fetch")
+            ->addComment("Override fetch() to indicate the real return type")
+            ->addComment("@return \Models\\$model")
+            ->setStatic(true)
+            ->setParameters([new Parameter("obj"), $recursive])
+            ->setBody("return parent::fetch(\$obj, \$recursive);");
 
         $content = "<?php\n\n" . $namespace;
+
+        $content = str_replace("\object", "object", $content);
 
         // Get directory
         $dir = dirname(__FILE__);
@@ -389,25 +416,40 @@ class CLI
         foreach (ClassType::from(Collection::class)->getMethods() as $method) {
             if ($method->getVisibility() == "public" && !in_array($method->getName(), ["__construct", "__call"])) {
 
-                $type = $method->getReturnType();
+                $return = strstr($method->getComment(), "@return ");
+                $col = Collection::from( preg_split("/[\s,]+/", $return) ); // split by spaces and lines
+                $type = $col->length() > 1 ? $col->get(1) : null;
 
                 if ($type == "array") {
                     $type = "\Models\\$model" . "[]";
-                } else if ($type == "object" || null == $type) {
+                } else if (strpos($type, "mixed")) {
                     $type = "\Models\\$model";
-                } elseif ($type == "AdrienM\Collection\Collection") {
-                    $type = "\Models\Collection\\$collection";
+                } elseif ($type == "Collection") {
+                    $type = "self";
                 }
 
-                $params = [];
-                foreach ($method->getParameters() as $parameter) {
-                    $typeHint = $parameter->getTypeHint() ? $parameter->getTypeHint() . " " : "";
-                    $params[] = $typeHint . "$" . $parameter->getName();
-                }
+                // Override method
+                $overrideMethod = $class->addMethod($method->getName())
+                    ->addComment("Override " . $method->getName() . "()")
+                    ->addComment("@return $type")
+                    ->setStatic($method->isStatic())
+                    ->setParameters($method->getParameters());
 
-                $class->addComment("@method $type " . $method->getName() . "(" . implode(", ", $params) . ")");
+                $parameters = implode(", ", array_map(function (Parameter $parameter) {
+                    return "$" . $parameter->getName();
+                }, $method->getParameters()));
+
+                $overrideMethod->setBody("return parent::" . $method->getName() . "($parameters);");
             }
         }
+
+        // Method toArray
+        $class->addMethod("toArray")
+            ->addComment("Convert object of \Models\\$model to array in the Collection")
+            ->addComment("@return self")
+            ->addBody("return \$this->map(function (\Models\\$model $" . lcfirst($model) . ") {")
+            ->addBody("    return $" . lcfirst($model) . "->toArray();")
+            ->addBody("});");
 
         $content = "<?php\n\n" . $namespace;
 
