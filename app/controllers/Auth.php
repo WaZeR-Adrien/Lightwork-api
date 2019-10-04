@@ -1,9 +1,13 @@
 <?php
 namespace Controllers;
 
+use Kernel\Api\ApiErrorCode;
+use Kernel\Api\ApiError;
+use Kernel\Api\ApiException;
 use Kernel\Http\Request;
 use Kernel\Http\Response;
 use Kernel\Tools\Utils;
+use Models\Dao\UserDAO;
 use Models\User;
 
 class Auth extends Controller
@@ -16,7 +20,7 @@ class Auth extends Controller
      */
     public static function check(Request $request, Response $response)
     {
-        $user = User::check($request->getBody()->get("email"), $request->getBody()->get("password"));
+        $user = UserDAO::check($request->getBody()->get("email"), $request->getBody()->get("password"));
         if ($user) {
             // create token here
             $token = Utils::createToken();
@@ -29,9 +33,9 @@ class Auth extends Controller
             $response->getBody()
                 ->add($token, "token");
 
-            return $response->fromApi("S_PO001")->toJson();
+            return $response->toJson();
         }
 
-        return $response->fromApi("E_A003")->toJson();
+        throw new ApiException(ApiErrorCode::A001);
     }
 }

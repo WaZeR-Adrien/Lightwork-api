@@ -11,7 +11,6 @@ class Example extends Controller
     /**
      * @name Get slug and id
      * @token
-     * @codes S_G001
      * @render json
      * @param Request $request
      * @param Response $response
@@ -26,12 +25,11 @@ class Example extends Controller
             ->add($request->getArgs()->get("id"), "id")
             ->add($lastAuth, "auth");
 
-        return $response->fromApi("S_G001")->toJson();
+        return $response->toJson();
     }
 
     /**
      * @name Get all auths
-     * @codes S_G001
      * @render json
      * @param Request $request
      * @param Response $response
@@ -39,19 +37,18 @@ class Example extends Controller
      */
     public static function getAll(Request $request, Response $response)
     {
-        $response->setBody(new \Kernel\Tools\Collection\Collection(
-            Auth::getAll()->map(function (Auth $auth) {
+        $response->setBody(new \AdrienM\Collection\Collection(
+            Auth::getAll( $request->getPage() )->map(function (Auth $auth) {
                 return $auth->fetch(true)->toArray();
             })
         ));
 
-        return $response->fromApi('S_G001')->toJson();
+        return $response->toJson( $request->getPage() );
     }
 
     /**
      * @name Edit an auth
      * @token
-     * @codes S_PU001, E_A005
      * @render json
      * @param Request $request
      * @param Response $response
@@ -64,12 +61,11 @@ class Example extends Controller
         $auth->setUser(User::getById( $request->getBody()->get("user_id") ));
         $auth->store();
 
-        return $response->fromApi('S_PU001')->toJson();
+        return $response->toJson();
     }
 
     /**
      * @name Add a new auth
-     * @codes S_PO001
      * @render json
      * @param Request $request
      * @param Response $response
@@ -92,12 +88,11 @@ class Example extends Controller
 
         $auth->store();
 
-        return $response->fromApi('S_PO001')->toJson();
+        return $response->toJson();
     }
 
     /**
      * @name Remove an auth
-     * @codes S_D001
      * @render json
      * @param Request $request
      * @param Response $response
@@ -108,6 +103,6 @@ class Example extends Controller
         $auth = new Auth($request->getArgs()->get("id"));
         $auth->delete();
 
-        return $response->fromApi('S_D001')->toJson();
+        return $response->toJson();
     }
 }
