@@ -1,11 +1,6 @@
 # Lightwork API
-Light MVC framework for API
-Switch to branch v*
+Lightweight PHP framework created to help developpers to discover the PHP bases
 
-## Versions :
-- [v1](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v1)
-- [v2](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v2)
-- [v3](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v3)
-- [v3.1](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v3.1)
-- [v4](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v4)
-- [v5](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v5)
+Last version : [Click here](https://github.com/WaZeR-Adrien/Lightwork-api/tree/v5)
+
+> **Node:** Currently this project is on hold. I would surely resume development when I have more time to devote to it
